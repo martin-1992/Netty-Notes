@@ -10,7 +10,7 @@
 ```
 
 ### AbstractChannel#bind
-　　
+
 - 判断当前线程是否在 EventLoop 线程中；
 - isActive()，调用 JDK 底层 API 判断该端口是否绑定，初次进行为未绑定；
 - doBind()，调用 JDK 底层 API 进行端口绑定，doBind 为 Channel 接口的方法，由子类实现；
