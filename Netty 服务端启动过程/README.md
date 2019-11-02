@@ -1,5 +1,5 @@
 ### Netty 服务端启动过程
-　　这里使用一个简单例子来说明，在配置好 EventLoopGroup、Channel、ChannelHandler 等等，绑定端口最终会调用 [dobind()]() 方法。在 
+　　这里使用一个简单例子来说明，在配置好 EventLoopGroup、Channel、ChannelHandler 等等，绑定端口最终会调用 dobind() 方法。
 
 ```java
 public final class Server {
@@ -41,6 +41,12 @@ public final class Server {
 }
 ```
 
+### doBind
+
+- [initAndRegister](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/initAndRegister.md)，创建 Channel、初始化配置 Channel、将 Channel 注册到 EventLoop（事件轮询器 Selector）；
+- [doBind0](https://github.com/martin-1992/Netty-Notes/edit/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/doBind0.md)，调用 JDK 底层 API 进行端口绑定。
+
+```java
     private ChannelFuture doBind(final SocketAddress localAddress) {
         // 创建、初始化、注册 Channel
         final ChannelFuture regFuture = initAndRegister();
@@ -56,25 +62,10 @@ public final class Server {
             doBind0(regFuture, channel, localAddress, promise);
             return promise;
         } else {
-            // Registration future is almost always fulfilled already, but just in case it's not.
-            final PendingRegistrationPromise promise = new PendingRegistrationPromise(channel);
-            regFuture.addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    Throwable cause = future.cause();
-                    if (cause != null) {
-                        // Registration on the EventLoop failed so fail the ChannelPromise directly to not cause an
-                        // IllegalStateException once we try to access the EventLoop of the Channel.
-                        promise.setFailure(cause);
-                    } else {
-                        // Registration was successful, so set the correct executor to use.
-                        // See https://github.com/netty/netty/issues/2586
-                        promise.registered();
-
-                        doBind0(regFuture, channel, localAddress, promise);
-                    }
+            // ...
                 }
             });
             return promise;
         }
     }
+```
