@@ -30,8 +30,7 @@ public class ReflectiveChannelFactory<T extends Channel> implements ChannelFacto
 }
 ```
 
-
-调用 ReflectiveChannelFactory 的方法的则是示例代码中的 .channel(NioServerSocketChannel.class)。
+　　调用 ReflectiveChannelFactory 的方法的则是示例代码中的 .channel(NioServerSocketChannel.class)。
 
 ```java
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
