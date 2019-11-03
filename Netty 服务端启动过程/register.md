@@ -125,7 +125,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ```
 
 ### AbstractNioChannel#doRegister
-　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上。
+　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，这里注册的 this 指的是 AbstractNioChannel，将其作为 SelectableChannel 类的附属 attachment，注册到 Selector 上。在 [processSelectedKeys]() 方法中，Selector 轮询 SelectionKey 时，会取出该 key 的 attachment，即 AbstractNioChannel，检查该 AbstractNioChannel 是否有 IO 事件要处理。
 
 ```java
     @Override
