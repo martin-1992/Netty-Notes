@@ -10,13 +10,13 @@ EventLoopGroup workerGroup = new NioEventLoopGroup();
 ### MultithreadEventExecutorGroup
 　　NioEventLoopGroup 最终会调用 MultithreadEventExecutorGroup 类的构造函数，nThreads 为线程数，每个新连接会绑定一个 NioEventLoop。当连接数超过线程数，会重新从 0 开始绑定，比如线程数为 8，第 9 个连接进来，则绑定第一个线程。
 
-- 初次创建时，executor 为空，需创建线程工厂 [newDefaultThreadFactory]()，并作为变量传入 [ThreadPerTaskExecutor]() 中，完成 executor 的创建；
+- 初次创建时，executor 为空，需创建线程工厂 [newDefaultThreadFactory](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/DefaultThreadFactory.md)，并作为变量传入 [ThreadPerTaskExecutor](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/ThreadPerTaskExecutor.md) 中，完成 executor 的创建；
 - 创建 EventExecutor 数组，其大小为线程数；
-- 遍历 EventExecutor 数组，调用 [newChild]()，为每个 EventExecutor 配置 executor、Selector 和任务队列，可理解为线程池，之后从池中获取线程对象 NioEventLoop；
+- 遍历 EventExecutor 数组，调用 [newChild](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChild.md)，为每个 EventExecutor 配置 executor、Selector 和任务队列，可理解为线程池，之后从池中获取线程对象 NioEventLoop；
     1. 创建新线程放入线程池中，每个线程会保存一个线程工厂 executor、一个 Selector、一个任务队列；
     2. 一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）；
     3. 当 Channel 有新数据读写时，将其放入任务队列，使用线程工厂创建线程来执行任务队列中的任务。
-- [chooserFactory.newChooser(children)]()，根据数组长度，判断创建数组的长度是否为 2 的次方，能否使用位运算获取索引下标；
+- [chooserFactory.newChooser(children)](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChooser.md)，根据数组长度，判断创建数组的长度是否为 2 的次方，能否使用位运算获取索引下标；
 - 添加线程终止的监听器。
 
 ```java
