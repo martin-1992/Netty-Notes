@@ -1,6 +1,6 @@
 ### NioEventLoopGroup#newChild
 
-- 保存线程工厂 executor，在 [new ThreadPerTaskExecutor(newDefaultThreadFactory())]() 创建；
+- 保存线程工厂 executor，在 [new ThreadPerTaskExecutor(newDefaultThreadFactory())](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/ThreadPerTaskExecutor.md) 创建；
 - 创建任务队列 taskQueue；
 - 创建轮询器 Selector，Channel（包装过的 Socket）注册到该轮询器，具体注册流程可看 [Netty 服务端启动过程#initAndRegister](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md)。
 
