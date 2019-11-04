@@ -1,0 +1,278 @@
+### processSelectedKey() 执行逻辑
+
+- selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet，遍历 keySet 效率更高；
+- selectedKeys 中每个 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 进行注册的，每个 key 的 attachment 对应一个 AbstractNioChannel，调用 processSelectedKey 进行处理该 Channel 已就绪的 IO 事件；
+- processSelectedKeysOptimized()，使用优化后的 keySet 来处理每个 key 的附属 attachment（包含 Channel），获取该 Channel 新增的已就绪的感兴趣的 IO 事件，包含OP_CONNECT 连接，OP_WRITE 写， OP_READ 读，OP_ACCEPT 新连接事件，针对不同的 IO 事件进行处理。
+
+### NioEventLoop 的构造函数
+　　调用底层 JDK 创建 Selector，一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）。
+
+```java
+    NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
+                 SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
+        // 父类构造函数，在 SingleThreadEventLoop 类中会初始化一个任务队列，其值为 DEFAULT_MAX_PENDING_TASKS
+        super(parent, executor, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
+        if (selectorProvider == null) {
+            throw new NullPointerException("selectorProvider");
+        }
+        if (strategy == null) {
+            throw new NullPointerException("selectStrategy");
+        }
+        provider = selectorProvider;
+        // 创建一个 Selector（IO 事件轮询器），一个 Selector 绑定一个线程 NioEventLoop，
+        // 一个 Selector 下有多个 Channel（包装的 Socket），这里会对 keySet 进行优化，从
+        // hashset 转换为数组
+        final SelectorTuple selectorTuple = openSelector();
+        selector = selectorTuple.selector;
+        // Selector
+        unwrappedSelector = selectorTuple.unwrappedSelector;
+        selectStrategy = strategy;
+    }
+```
+
+### NioEventLoop#openSelector
+　　主要是获取优化后的 Selector。
+
+- 调用 JDK 底层创建 Selector；
+- 创建一个新线程，使用反射方法获得 SelectorImpl 类对象；
+- 使用反射方法获取 SelectorImpl 类的两个属性 selectedKeys 和 publicSelectedKeys，这两个都使用 hashset 来实现的，使用优化后的数组形式的 keySet 代替它们。
+
+```java
+    private Selector selector;
+    private Selector unwrappedSelector;
+    private SelectedSelectionKeySet selectedKeys;
+    
+    private SelectorTuple openSelector() {
+        final Selector unwrappedSelector;
+        try {
+            // 调用 JDK 底层创建 Selector
+            unwrappedSelector = provider.openSelector();
+        } catch (IOException e) {
+            throw new ChannelException("failed to open a new selector", e);
+        }
+        // 表示关闭 key 优化，使用原生的 Selector，默认为 false
+        if (DISABLE_KEY_SET_OPTIMIZATION) {
+            return new SelectorTuple(unwrappedSelector);
+        }
+
+        // 创建一个新线程，使用反射方法获得 SelectorImpl 类对象
+        Object maybeSelectorImplClass = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            @Override
+            public Object run() {
+                try {
+                    return Class.forName(
+                            "sun.nio.ch.SelectorImpl",
+                            false,
+                            PlatformDependent.getSystemClassLoader());
+                } catch (Throwable cause) {
+                    return cause;
+                }
+            }
+        });
+
+        // 反射创建失败，则返回原生的 Selector
+        if (!(maybeSelectorImplClass instanceof Class) ||
+            // ensure the current selector implementation is what we can instrument.
+            !((Class<?>) maybeSelectorImplClass).isAssignableFrom(unwrappedSelector.getClass())) {
+            if (maybeSelectorImplClass instanceof Throwable) {
+                Throwable t = (Throwable) maybeSelectorImplClass;
+                logger.trace("failed to instrument a special java.util.Set into: {}", unwrappedSelector, t);
+            }
+            return new SelectorTuple(unwrappedSelector);
+        }
+
+        final Class<?> selectorImplClass = (Class<?>) maybeSelectorImplClass;
+        // 新建一个 keySet，大小为 1024 的数组，代替原先使用 hashset 数据格式的 keySet
+        final SelectedSelectionKeySet selectedKeySet = new SelectedSelectionKeySet();
+
+        Object maybeException = AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            @Override
+            public Object run() {
+                try {
+                    // 使用反射方式获取该 selectorImplClass 的两个属性 selectedKeys 和 publicSelectedKeys，
+                    // 这两个属性都用 hashset 实现的
+                    Field selectedKeysField = selectorImplClass.getDeclaredField("selectedKeys");
+                    Field publicSelectedKeysField = selectorImplClass.getDeclaredField("publicSelectedKeys");
+
+                    // 如果 Java 版本为 9 及以上，则尝试用 Unsafe 来代替 SelectionKeySet
+                    if (PlatformDependent.javaVersion() >= 9 && PlatformDependent.hasUnsafe()) {
+                        long selectedKeysFieldOffset = PlatformDependent.objectFieldOffset(selectedKeysField);
+                        long publicSelectedKeysFieldOffset =
+                                PlatformDependent.objectFieldOffset(publicSelectedKeysField);
+
+                        if (selectedKeysFieldOffset != -1 && publicSelectedKeysFieldOffset != -1) {
+                            PlatformDependent.putObject(
+                                    unwrappedSelector, selectedKeysFieldOffset, selectedKeySet);
+                            PlatformDependent.putObject(
+                                    unwrappedSelector, publicSelectedKeysFieldOffset, selectedKeySet);
+                            return null;
+                        }
+                    }
+
+                    Throwable cause = ReflectionUtil.trySetAccessible(selectedKeysField, true);
+                    if (cause != null) {
+                        return cause;
+                    }
+                    cause = ReflectionUtil.trySetAccessible(publicSelectedKeysField, true);
+                    if (cause != null) {
+                        return cause;
+                    }
+
+                    // 这两个属性 selectedKeysField 和 publicSelectedKeysField 的 keySet 从原生的 hashset 格式
+                    // 替换为数组格式的 selectedKeySet
+                    selectedKeysField.set(unwrappedSelector, selectedKeySet);
+                    publicSelectedKeysField.set(unwrappedSelector, selectedKeySet);
+                    return null;
+                } catch (NoSuchFieldException e) {
+                    return e;
+                } catch (IllegalAccessException e) {
+                    return e;
+                }
+            }
+        });
+
+        if (maybeException instanceof Exception) {
+            selectedKeys = null;
+            Exception e = (Exception) maybeException;
+            logger.trace("failed to instrument a special java.util.Set into: {}", unwrappedSelector, e);
+            return new SelectorTuple(unwrappedSelector);
+        }
+        // 数组形式的 keySet，在 processSelectedKeys 用到
+        selectedKeys = selectedKeySet;
+        logger.trace("instrumented a special java.util.Set into: {}", unwrappedSelector);
+        return new SelectorTuple(unwrappedSelector,
+                                 new SelectedSelectionKeySetSelector(unwrappedSelector, selectedKeySet));
+    }
+```
+
+#### SelectedSelectionKeySet 的构造函数
+　　数组形式的 keySet，在 NioEventLoop#openSelector 中有使用，代替原生的 hahset 的 keySet。
+
+```java
+    SelectedSelectionKeySet() {
+        keys = new SelectionKey[1024];
+    }
+```
+
+### processSelectedKeys
+　　selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet。
+
+```java
+    private void processSelectedKeys() {
+        // NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的
+        // selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet
+        if (selectedKeys != null) {
+            processSelectedKeysOptimized();
+        } else {
+            // 为空，表示没有使用优化后的 keySet
+            processSelectedKeysPlain(selector.selectedKeys());
+        }
+    }
+```
+
+### processSelectedKeysOptimized
+　　遍历 keySet，keySet 中的每个 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 进行注册的，每个 key 的 attachment 对应一个 AbstractNioChannel，调用 processSelectedKey 进行处理该 Channel 已就绪的 IO 事件。
+
+```java
+    private void processSelectedKeysOptimized() {
+        // 遍历 keySet，获取每个 key 对应的 Channel，Netty 使用数组形式的 keySet，遍历更高效
+        for (int i = 0; i < selectedKeys.size; ++i) {
+            // 这里 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register] 进行注册的，
+            // 每个 key 的 attachment 对应一个 AbstractNioChannel
+            final SelectionKey k = selectedKeys.keys[i];
+            // null out entry in the array to allow to have it GC'ed once the Channel close
+            // See https://github.com/netty/netty/issues/2363
+            // 用于 GC 回收
+            selectedKeys.keys[i] = null;
+            // attachment 为 Channel，在 Netty 服务端的启动过程中，是将 Channel 作为 key 的 附属 attachment
+            // 注册到 Selector 中，然后这里获取的 attachment 即为 Channel
+            final Object a = k.attachment();
+           
+            if (a instanceof AbstractNioChannel) {
+                // 处理该 Channel 感兴趣的事件
+                processSelectedKey(k, (AbstractNioChannel) a);
+            } else {
+                // 不为 AbstractNioChannel，则转为 NioTask 进行处理
+                @SuppressWarnings("unchecked")
+                NioTask<SelectableChannel> task = (NioTask<SelectableChannel>) a;
+                processSelectedKey(k, task);
+            }
+            // 需要重新进行一次无阻塞的 select 方法，获取增加的已就绪的感兴趣的 IO 事件
+            if (needsToSelectAgain) {
+                // null out entries in the array to allow to have it GC'ed once the Channel close
+                // See https://github.com/netty/netty/issues/2363
+                selectedKeys.reset(i + 1);
+
+                selectAgain();
+                i = -1;
+            }
+        }
+    }
+```
+
+### processSelectedKey
+　　处理该 Channel 已就绪的 IO 事件。
+
+- key 不合法，关闭该 Channel；
+- key 合法，获取这个 key 已就绪的 IO 事件，有 OP_CONNECT 连接，OP_WRITE 写，OP_READ 读，OP_ACCEPT 新连接事件等；
+- 当 OP_CONNECT 事件已就绪；
+    1. 获取该 key（Channel）感兴趣的事件；
+    2. 移除掉对 OP_CONNECT 感兴趣，因为只需获取一次 OP_CONNECT 事件，建立连接即可；
+    3. 设置该 Channel 感兴趣的事件，已移除掉 OP_CONNECT；
+    4. 完成连接。
+- OP_WRITE 写事件就绪；
+- 检测到 read 操作或 accept 操作，则调用 NioMessageUnsafe.read 方法。
+
+```java
+    private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
+        // AbstractNioMessageChannel$NioMessageUnsafe
+        final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
+        // key 不合法，关闭该 Channel
+        if (!k.isValid()) {
+            final EventLoop eventLoop;
+            try {
+                // 可能是不在 EventLoop 线程，获取 EventLoop 线程
+                eventLoop = ch.eventLoop();
+            } catch (Throwable ignored) {
+                return;
+            }
+            // eventLoop 线程不为 NioEventLoop，返回
+            if (eventLoop != this || eventLoop == null) {
+                return;
+            }
+            // close the channel if the key is not valid anymore
+            unsafe.close(unsafe.voidPromise());
+            return;
+        }
+
+        try {
+            // key 合法，获取这个 key 已就绪的 IO 事件，有 OP_CONNECT 连接，OP_WRITE 写，
+            // OP_READ 读，OP_ACCEPT 新连接事件等
+            int readyOps = k.readyOps();
+            // OP_CONNECT 事件已就绪
+            if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
+                // 获取该 key（Channel）感兴趣的事件
+                int ops = k.interestOps();
+                // 移除掉对 OP_CONNECT 感兴趣，因为只需获取一次 OP_CONNECT 事件，建立连接即可
+                ops &= ~SelectionKey.OP_CONNECT;
+                // 设置该 Channel 感兴趣的事件，已移除掉 OP_CONNECT
+                k.interestOps(ops);
+                // 完成连接
+                unsafe.finishConnect();
+            }
+
+            // OP_WRITE 写事件就绪
+            if ((readyOps & SelectionKey.OP_WRITE) != 0) {
+                ch.unsafe().forceFlush();
+            }
+
+            // 检测到 read 操作或 accept 操作，则调用 NioMessageUnsafe.read 方法
+            if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                // AbstractNioMessageChannel 的 read 方法
+                unsafe.read();
+            }
+        } catch (CancelledKeyException ignored) {
+            unsafe.close(unsafe.voidPromise());
+        }
+    }
+```
