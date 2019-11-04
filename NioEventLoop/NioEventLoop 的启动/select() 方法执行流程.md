@@ -161,7 +161,7 @@
 
 
 ### NioEventLoop#rebuildSelector
-　　当前线程不为 EventLoop 线程，调用 [SingleThreadEventExecutor#](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md)，放入任务队列中或创建一个新线程（不阻塞当前线程执行），来执行重建 Selector 方法。
+　　当前线程不为 EventLoop 线程，调用 [SingleThreadEventExecutor#execute](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md)，放入任务队列中或创建一个新线程（不阻塞当前线程执行），来执行重建 Selector 方法。
 
 ```java
     public void rebuildSelector() {
