@@ -31,7 +31,7 @@ EventLoopGroup workerGroup = new NioEventLoopGroup();
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
         // 创建线程池 EventExecutor 数组，其大小为线程数，nThreads 在 EventLoopGroup bossGroup = new NioEventLoopGroup(1)
-        // 进行设置，这里 nThreads 为 1*2（cpu 数目乘以2），因为是 boss 线程，负责读取连接，而连接成功的线程会注册到 worker 线程池，负责数据读写
+        // 进行设置，这里 nThreads 为 1，因为是 boss 线程，负责读取连接，而连接成功的线程会注册到 worker 线程池，负责数据读写
         children = new EventExecutor[nThreads];
 
         for (int i = 0; i < nThreads; i ++) {
