@@ -131,7 +131,7 @@ private boolean fetchFromScheduledTaskQueue() {
         for (;;) {
             // 队头任务
             Runnable task = taskQueue.poll(); // <1>
-            // 如果该任务为空任务（WAKEUP_TASK），跳过
+            // 如果该任务为空任务（WAKEUP_TASK），跳过，该任务只是用于唤醒 EventLoop 线程
             if (task == WAKEUP_TASK) {
                 continue;
             }
