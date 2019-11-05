@@ -126,6 +126,18 @@ private boolean fetchFromScheduledTaskQueue() {
             }
         }
     }
+    
+    protected static Runnable pollTaskFrom(Queue<Runnable> taskQueue) {
+        for (;;) {
+            // 队头任务
+            Runnable task = taskQueue.poll(); // <1>
+            // 如果该任务为空任务（WAKEUP_TASK），跳过
+            if (task == WAKEUP_TASK) {
+                continue;
+            }
+            return task;
+        }
+    }
 ```
 
 #### AbstractEventExecutor#safeExecute
