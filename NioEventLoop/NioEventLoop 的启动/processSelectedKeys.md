@@ -1,4 +1,4 @@
-### processSelectedKey() 执行逻辑
+### NioEventLoop#processSelectedKey() 执行逻辑
 
 - selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet，遍历 keySet 效率更高；
 - selectedKeys 中每个 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 进行注册的，每个 key 的 attachment 对应一个 AbstractNioChannel，调用 processSelectedKey 进行处理该 Channel 已就绪的 IO 事件；
@@ -154,8 +154,8 @@
     }
 ```
 
-### processSelectedKeys
-　　selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet。
+### NioEventLoop#processSelectedKeys
+　　selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet。keySet 用于存放注册到该 Selector 的 Channel，通过轮询方式对该 Channel 已就绪的事件进行相应处理，轮询即数组遍历，效率更高。
 
 ```java
     private void processSelectedKeys() {
@@ -170,7 +170,7 @@
     }
 ```
 
-### processSelectedKeysOptimized
+### NioEventLoop#processSelectedKeysOptimized
 　　遍历 keySet，keySet 中的每个 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 进行注册的，每个 key 的 attachment 对应一个 AbstractNioChannel，调用 processSelectedKey 进行处理该 Channel 已就绪的 IO 事件。
 
 ```java
@@ -210,7 +210,7 @@
     }
 ```
 
-### processSelectedKey
+### NioEventLoop#processSelectedKey
 　　处理该 Channel 已就绪的 IO 事件。
 
 - key 不合法，关闭该 Channel；
