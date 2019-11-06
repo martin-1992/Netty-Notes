@@ -15,7 +15,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ```
 
 ### SingleThreadEventLoop#register
-　　将 DefaultChannelPromise 注册到 Selector，它是一个线程 EventLoop。
+　　将 DefaultChannelPromise 注册到 Selector，它是一个线程 EventLoop，this 为 SingleThreadEventLoop 类的实例。
 
 ```java
     @Override
@@ -94,6 +94,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 boolean firstRegistration = neverRegistered;
                 //  将 Channel 注册到 EventLoop（Selector） 上
                 doRegister();
+                // 从 true 变为 false，表示已经注册过了
                 neverRegistered = false;
                 registered = true;
 
