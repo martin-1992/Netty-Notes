@@ -90,6 +90,8 @@ EventLoopGroup workerGroup = new NioEventLoopGroup();
     }
 ```
 
+![avatar](photo_2.png)
+
 #### MultithreadEventExecutorGroup#newDefaultThreadFactory
 　　传入当前类的类名，这里为 MultithreadEventExecutorGroup，作为线程工厂的名称前缀。[DefaultThreadFactory]() 创建线程工厂，用于创建新线程。
 
