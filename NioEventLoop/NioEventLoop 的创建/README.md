@@ -12,7 +12,7 @@ EventLoopGroup workerGroup = new NioEventLoopGroup();
 
 - 初次创建时，executor 为空，需创建线程工厂 [newDefaultThreadFactory](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/DefaultThreadFactory.md)，并作为变量传入 [ThreadPerTaskExecutor](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/ThreadPerTaskExecutor.md) 中，完成 executor 的创建；
 - 创建 EventExecutor 数组，其大小为线程数；
-- 遍历 EventExecutor 数组，调用 [newChild](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChild.md)，为每个 EventExecutor 配置 executor、Selector 和任务队列，可理解为线程池，之后从池中获取线程对象 NioEventLoop；
+- 遍历 EventExecutor 数组，调用 [newChild](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChild.md)，创建 Selector、任务队列，为每个 EventExecutor 配置 executor、Selector 和任务队列，可理解为线程池，之后从池中获取线程对象 NioEventLoop；
     1. 创建新线程放入线程池中，每个线程会保存一个线程工厂 executor、一个 Selector、一个任务队列；
     2. 一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）；
     3. 每个 Selector 轮询注册到该 Selector 下的 Channel，当有 IO 任务时，调用 [NioEventLoop#processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 异步执行任务；
