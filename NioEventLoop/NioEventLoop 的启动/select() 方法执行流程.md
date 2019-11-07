@@ -1,5 +1,6 @@
 ### NioEventLoop#select
 
+- [SelectStrategy#calculateStrategy](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SelectStrategy.md)，获取策略；
 - select 次数为 0 时，会进行一次非阻塞的 select 操作，返回 Channel 新增的感兴趣的就绪 IO 事件数量；
 - 通过计算阻塞时间和 select 次数，来判断是否触发空轮询 bug，是则重建 Selector 来避免空轮询 bug；
 
@@ -160,7 +161,7 @@
 
 
 ### NioEventLoop#rebuildSelector
-　　当前线程不为 EventLoop 线程，调用 [SingleThreadEventExecutor]()，放入任务队列中或创建一个新线程，来执行重建 Selector 方法。
+　　当前线程不为 EventLoop 线程，调用 [SingleThreadEventExecutor#execute](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md)，放入任务队列中或创建一个新线程（不阻塞当前线程执行），来执行重建 Selector 方法。
 
 ```java
     public void rebuildSelector() {

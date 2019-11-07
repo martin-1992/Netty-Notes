@@ -32,7 +32,7 @@
 ```
 
 ### SingleThreadEventExecutor#runAllTasks(long timeoutNanos)
-　　和 runAllTasks() 唯一区别在于该方法会每执行 64 次任务判断有没超过 timeoutNanos，超时则不执行。在 [NioEventLoop 的启动]() 中设置了 ioRatio 为 50，防止处理任务队列的事件太长，导致没法处理 Channel 中的读写事件。**使用时间片方式，来轮询处理 Channel 中的读写事件和任务队列中的事件。**
+　　和 runAllTasks() 唯一区别在于该方法会每执行 64 次任务判断有没超过 timeoutNanos，超时则不执行。在 [NioEventLoop 的启动]() 中设置了 ioRatio 为 50，**使用时间片方式，来轮询处理 Channel 中的读写事件和任务队列中的事件。** 防止处理任务队列的时间太长，导致没法处理 Channel 中的读写事件。
 
 ```java
     protected boolean runAllTasks(long timeoutNanos) {
@@ -124,6 +124,18 @@ private boolean fetchFromScheduledTaskQueue() {
             if (task == null) {
                 return true;
             }
+        }
+    }
+    
+    protected static Runnable pollTaskFrom(Queue<Runnable> taskQueue) {
+        for (;;) {
+            // 队头任务
+            Runnable task = taskQueue.poll(); // <1>
+            // 如果该任务为空任务（WAKEUP_TASK），跳过，该任务只是用于唤醒 EventLoop 线程
+            if (task == WAKEUP_TASK) {
+                continue;
+            }
+            return task;
         }
     }
 ```

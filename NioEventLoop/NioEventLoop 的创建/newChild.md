@@ -13,7 +13,7 @@
 ```
 
 ### NioEventLoop 的构造函数
-　　调用底层 JDK 创建 Selector，一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）。
+　　使用 [openSelector](https://github.com/martin-1992/Netty-Notes/blob/a9687b838b766576421788f93c358fe2f10d15fc/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md)，调用底层 JDK 创建 Selector，一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个注册的 Channel（包装的 Socket）。
 
 ```java
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,

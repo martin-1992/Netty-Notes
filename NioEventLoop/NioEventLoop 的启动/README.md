@@ -1,9 +1,9 @@
 ### NioEventLoop#run
 　　run 方法主要做了三件事：
 
-- [NioEventLoop#select]()，检查是否有 IO 事件。调用 select 方法，轮询注册到 selector 上面的连接 IO 事件。Netty 会通过阻塞时间长短来判断是否触发空轮询 bug，如果当前阻塞一个 selector 操作，实际没有花这么长时间，有可能触发空轮询 bug，默认情况下，这个现象达到 512 次，则重建一个 selector，把之前 selector 上面所有的 key 重新移交到新的 selector，通过这种方式来避免 JDK 空轮询 bug 的；
-- [NioEventLoop#processSelectedKeys]()，处理 IO 事件，处理在前面轮询出来的 IO 事件；
-- [SingleThreadEventExecutora#runAllTasks]()，处理异步任务队列，处理外部线程扔到 task 里面的任务。通过 inEventLoop 方法来判断是否为外部线程，是则将所有操作封装成一个 task，放到普通队列中 MPScQueue，然后在 runAllTasks() 里会处理执行队列中的任务操作。
+- [NioEventLoop#select](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/select()%20%E6%96%B9%E6%B3%95%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B.md)，检查是否有 IO 事件。调用 select 方法，轮询注册到 selector 上面的连接 IO 事件。Netty 会通过阻塞时间长短来判断是否触发空轮询 bug，如果当前阻塞一个 selector 操作，实际没有花这么长时间，有可能触发空轮询 bug，默认情况下，这个现象达到 512 次，则重建一个 selector，把之前 selector 上面所有的 key 重新移交到新的 selector，通过这种方式来避免 JDK 空轮询 bug 的；
+- [NioEventLoop#processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md)，通过 JDK 底层 API 获取注册到该 Selector 的所有 Channel 中已就绪的 IO 事件，进行处理。IO 任务不会放到任务队列中，而是通过该方法异步执行 selectionKey 中 ready 的事件，比如 accept、connect、read、write 等；
+- [SingleThreadEventExecutora#runAllTasks](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/runAllTasks.md)，该方法有两个，一个不带参数，是执行普通任务队列的任务直到全部任务执行完毕。另一个是带超时时间的方法，**使用时间片方式，来轮询处理 Channel 中的读写事件和任务队列中的事件。** 防止处理任务队列的时间太长，导致没法处理 Channel 中的读写事件。两个方法都会将到指定时间的定时任务添加到普通任务队列中执行，非 IO 任务首先是添加到任务队列中，比如注册 register0、重建 Selector（解决空轮询 bug），然后调用该方法执行。
 
 ```java
     @Override
