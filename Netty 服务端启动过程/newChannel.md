@@ -46,7 +46,7 @@ public class ReflectiveChannelFactory<T extends Channel> implements ChannelFacto
 
 
 ### AbstractBootstrap#channel
-　　从该 channel 方法进入可看到将 NioServerSocketChannel.class 传入到 ReflectiveChannelFactory 的构造函数中，然后通过 bind() 方法，最后会调用到 channelFactory.newChannel() 方法进行实例化。
+　　从该 channel 方法进入可看到将 [NioServerSocketChannel.class](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/NioServerSocketChannel.md) 传入到 ReflectiveChannelFactory 的构造函数中，然后通过 bind() 方法，最后会调用到 channelFactory.newChannel() 方法进行实例化。
 
 ```java
     public B channel(Class<? extends C> channelClass) {
