@@ -83,7 +83,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ```
 
 ### AbstractChannel#register0
-　　调用 doRegister() 方法，将 Channel 注册到 EventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例。
+
+- 调用 doRegister() 方法，将新连接 Channel 注册到 EventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例；
+- 当新连接注册到 EventLoop（Selector） 上，如果为自动读，则调用 [beginRead()]() 方法，将读事件 readInterestOp 注册到 Selector 上。当有数据进来，就会进行数据的读写。
 
 ```java
         private void register0(ChannelPromise promise) {
@@ -109,10 +111,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                     if (firstRegistration) {
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
-                        // This channel was registered before and autoRead() is set. This means we need to begin read
-                        // again so that we process inbound data.
-                        //
-                        // See https://github.com/netty/netty/issues/4805
+                        // 读数据
                         beginRead();
                     }
                 }
