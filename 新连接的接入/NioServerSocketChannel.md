@@ -1,56 +1,52 @@
-### NioSocketChannel 的构造函数
-　　设置该客户端 Channel 的属性和配置。
-
-传入服务端的 Channel 和客户端的 Channel。
-
-继续调用父类函数 super(parent, socket)，对服务端的 Channel 进行配置；
-创建客户端 Channel 相关的组件，有 id、unsafe、channelPipeline；
-保存创建好的 JDK 底层 Channel，设置此 Channel 为对读事件感兴趣；
-设置此 Channel 为非阻塞模式。
-创建一个 config，这里的客户端 Channel 通过 new 创建（服务端 Channel 是通过反射方式创建的），配置客户端的 Channel 禁止 Nagle 算法，小的数据包会尽可能发送出去，降低延时。
-    public NioSocketChannel(Channel parent, SocketChannel socket) {
-        // 调用父类函数，parent 为服务端 Channel，socket 为客户端的 JDK 底层 Channel
-        super(parent, socket);
-        // 创建一个 config，配置此 Channel 禁止 Nagle 算法
-        config = new NioSocketChannelConfig(this, socket.socket());
-    }
-
-### NioSocketChannel 的构造函数
-　　设置该客户端 Channel 的属性和配置，设置该客户端 Channel 禁止 Nagle 算法。
+### NioServerSocketChannel的构造函数
+　　设置服务端 Channel 的属性和配置。示例代码在 [Netty 的启动过程#initAndRegister](https://github.com/martin-1992/Netty-Notes/edit/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/initAndRegister.md) 讲到通过反射方法创建 ServerSocketChannel，该类会调用父类构造函数，创建 Pipeline。
 
 ```java
-    public NioSocketChannel(Channel parent, SocketChannel socket) {
-        // 调用父类 AbstractNioByteChannel 的构造函数
-        super(parent, socket);
+// 示例代码部分
+ServerBootstrap b = new ServerBootstrap();
+// 通过 group 将两大线程配置进来
+b.group(bossGroup, workerGroup)
+        // 设置服务端的 ServerSocketChannel
+        .channel(NioServerSocketChannel.class)
+```
+
+- AbstractNioByteChannel，**使用变量 ch 保存创建好的 JDK 底层 Channel，设置此 Channel 为对连接的接入事件感兴趣；**
+- 设置此 Channel 为非阻塞模式；
+- 创建服务端 Channel 相关的组件，**包括 id、unsafe、Pipeline；**
+- 创建一个 config，配置服务端的 Channel 禁止 Nagle 算法，小的数据包会尽可能发送出去，降低延时。
+
+### NioServerSocketChannel 的构造函数
+　　设置服务端 Channel 的属性和配置，设置该客户端 Channel 禁止 Nagle 算法，SelectionKey.OP_ACCEPT 表示服务端 Channel 对连接的接入事件感兴趣。
+
+```java
+    public NioServerSocketChannel(ServerSocketChannel channel) {
+        // 调用父类，为 AbstractNioMessageChannel，最终调用 AbstractNioChannel
+        super(null, channel, SelectionKey.OP_ACCEPT);
         // 创建一个 config，配置此 Channel 禁止 Nagle 算法
-        config = new NioSocketChannelConfig(this, socket.socket());
+        config = new NioServerSocketChannelConfig(this, javaChannel().socket());
+    }
+    
+    /**
+     * AbstractNioByteChannel 的构造函数
+     */
+    protected AbstractNioMessageChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        super(parent, ch, readInterestOp);
     }
 ```
 
+### AbstractNioByteChannel 的构造函数<a id='AbstractNioByteChannel'></a>
 
-### AbstractNioByteChannel 的构造函数
-　　SelectionKey.OP_READ 表示客户端 Channel 对读事件感兴趣，后面会将该 Channel 注册到 worker 的 Selector 上，由 worker 的线程组 EventLoopGroup 来处理。
-
-```java
-    protected AbstractNioByteChannel(Channel parent, SelectableChannel ch) {
-        super(parent, ch, SelectionKey.OP_READ);
-    }
-```
-
-
-### AbstractNioByteChannel 的构造函数
-
-- 保存创建好的 JDK 底层 Channel；
-- 设置此 Channel 对读事件感兴趣；
+- 使用变量 ch 保存创建好的 JDK 底层 Channel；
+- 设置此 Channel 对连接的接入事件感兴趣；
 - 设置此 Channel 为非阻塞模式。
 
 ```java
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
-        // 创建和此 Channel 相关的组件，包括 Channel的唯一标识符 id、用于读写的 unsafe、Pipeline
+        // 创建和此 Channel 相关的组件，包括 Channel 的唯一标识符 id、用于读写的 unsafe、Pipeline
         super(parent);
         // 保存创建好的 JDK 底层 Channel
         this.ch = ch;
-        // 感兴趣的读事件
+        // 感兴趣的 IO 事件，NioServerSocketChannel 传入的是连接的接入事件
         this.readInterestOp = readInterestOp;
         try {
             // 设置此 Channel 为非阻塞模式
@@ -73,20 +69,16 @@
 
 
 ### AbstractChannel 的构造函数
-
-- 保存创建此客户端 Channel 的服务端 Channel，也就是在服务端启动过程中，通过反射创建的 Channel；
-- 创建 id（Channel 的唯一标识）、unsafe（底层数据的读写）、pipeline（业务逻辑的载体，负责该 Channel 数据处理的业务逻辑链）。
+　　创建 id（Channel 的唯一标识）、unsafe（底层数据的读写）、Pipeline（业务逻辑的载体，负责该 Channel 数据处理的业务逻辑链）。
 
 ```java
     protected AbstractChannel(Channel parent) {
-        // 保存创建此客户端 Channel 的服务端 Channel，即在服务端启动过程中，通过反射创建的 Channel
         this.parent = parent;
         id = newId();
         unsafe = newUnsafe();
         pipeline = newChannelPipeline();
     }
 ```
-
 
 #### NioServerSocketChannel#javaChannel
 　　获取服务端的 Channel，调用父类 AbstractNioChannel#javaChannel 获取。
@@ -100,7 +92,7 @@
 
 
 #### AbstractNioChannel#javaChannel
-　　使用变量 ch 保存服务端 Channel，在 []() 进行注册。
+　　返回 Channel，变量 ch 在 前面的 [AbstractNioByteChannel 的构造函数](#AbstractNioByteChannel) 中提到，保存的是 NioServerSocketChannel。
 
 ```java
     private final SelectableChannel ch;

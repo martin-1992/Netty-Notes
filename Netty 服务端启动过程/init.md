@@ -61,6 +61,12 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 ### init
 　　对每一个配置项，使用同步方法 synchronized 进行配置，初始化 CHannel，保证线程安全。
 
+- 配置 options；
+- 获取 Pipeline，在引导类中 .channel(NioServerSocketChannel.class) 中创建；
+- 设置 currentChildOptions 和 currentChildAttrs；
+- 为 pipeline 添加 ChannelHandler；
+- 调用 [SingleThreadEventExecutor#execute](https://github.com/martin-1992/Netty-Notes/blob/56ca8cb154c280855b3caf6746df71e77e7f65f8/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md) 将该非 IO 任务添加到任务队列执行，为 pipeline 添加 [ServerBootstrapAcceptor]()。
+
 ```java
     @Override
     void init(Channel channel) throws Exception {
@@ -77,7 +83,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 channel.attr(key).set(e.getValue());
             }
         }
-
+        // 获取 Pipeline
         ChannelPipeline p = channel.pipeline();
 
         final EventLoopGroup currentChildGroup = childGroup;
@@ -96,6 +102,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             public void initChannel(final Channel ch) throws Exception {
                 final ChannelPipeline pipeline = ch.pipeline();
                 ChannelHandler handler = config.handler();
+                // 添加 ChannelHandler
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
