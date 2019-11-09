@@ -85,7 +85,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ### AbstractChannel#register0
 
 - 调用 doRegister() 方法，将新连接 Channel 注册到 EventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例；
-- 当新连接注册到 EventLoop（Selector） 上，如果为自动读，则调用 [beginRead()]() 方法，将读事件 readInterestOp 注册到 Selector 上。当有数据进来，就会进行数据的读写。
+- 当新连接注册到 EventLoop（Selector） 上，第一次注册时会调用 [pipeline.fireChannelActive]() 将读事件注册到 Selector 上。当有数据进来，就会进行数据的读写。
 
 ```java
         private void register0(ChannelPromise promise) {
@@ -109,6 +109,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 // 新连接，并注册到 EventLoop（Selector） 上，则为 true
                 if (isActive()) {
                     if (firstRegistration) {
+                        // 第一次注册，读事件绑定
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
                         // 读数据
