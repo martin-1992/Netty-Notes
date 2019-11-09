@@ -27,14 +27,14 @@ b.group(bossGroup, workerGroup)
     }
     
     /**
-     * AbstractNioByteChannel 的构造函数
+     * AbstractNioMessageChannel 的构造函数
      */
     protected AbstractNioMessageChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
         super(parent, ch, readInterestOp);
     }
 ```
 
-### AbstractNioByteChannel 的构造函数<a id='AbstractNioByteChannel'></a>
+### AbstractNioChannel 的构造函数<a id='AbstractNioChannel'></a>
 
 - 使用变量 ch 保存创建好的 JDK 底层 Channel；
 - 设置此 Channel 对连接的接入事件感兴趣；
@@ -92,7 +92,7 @@ b.group(bossGroup, workerGroup)
 
 
 #### AbstractNioChannel#javaChannel
-　　返回 Channel，变量 ch 在 前面的 [AbstractNioByteChannel 的构造函数](#AbstractNioByteChannel) 中提到，保存的是 NioServerSocketChannel。
+　　返回 Channel，变量 ch 在 前面的 [AbstractNioChannel 的构造函数](#AbstractNioChannel) 中提到，保存的是 NioServerSocketChannel。
 
 ```java
     private final SelectableChannel ch;
