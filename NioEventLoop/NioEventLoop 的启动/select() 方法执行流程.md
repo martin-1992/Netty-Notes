@@ -182,8 +182,10 @@
 ```
 
 
-### NioEventLoop#rebuildSelector
+### NioEventLoop#rebuildSelector0
 　　重建 Selector。
+
+![avatar](photo_4.png)
 
 - 创建一个新的 Selector；
 - 将旧 Selector 所有的 Key 和 Key 对应的 Channel、感兴趣的 IO 事件注册到新的 Selector 上，每个 Key 为一个 Channel；
