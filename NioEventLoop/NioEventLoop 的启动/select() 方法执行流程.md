@@ -39,6 +39,9 @@
 
 
 ### NioEventLoop#select
+　　当一个或多个 Channel 注册到 Selector 后，调用 select 方法，返回所感兴趣的事件的已就绪的 Channel。如果对读事件感兴趣，则会返回读已就绪的 Chanel。
+
+![avatar](photo_1.png)
 
 - 变量 selectCnt 记录 Select 的次数，当遇到空轮询 bug 时，该 selectCnt 会疯狂增加，超过阈值则进行重建 Selector；
 - 使用计时来判断执行 select 操作的时间，如果超时，且没有进行过一次 select 操作，则进行非阻塞的 selectNow 操作。超时，且进行过一次 select 操作，则中止；
@@ -73,7 +76,7 @@
                 }
 
                 // 没超时，任务队列中有任务，通过 CAS 将其设为 true，表示 selector 已经 wakeUp，
-                // 无阻塞返回 Channel 新增的感兴趣的就绪 IO 事件数量，并将 selectCnt 重置为 1
+                // 无阻塞返回所感兴趣的事件的已就绪的 Channel，并将 selectCnt 重置为 1
                 if (hasTasks() && wakenUp.compareAndSet(false, true)) {
                     selector.selectNow();
                     selectCnt = 1;
