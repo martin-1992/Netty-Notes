@@ -25,9 +25,11 @@
 ```
 
 ### NioEventLoop#openSelector
-　　主要是获取优化后的 Selector。
+　　主要是获取优化后的 Selector，原生的 Selector 中 selectedKeys 和 publicSelectedKeys 都使用 hashSet 实现，替换为用数组实现，便于 Netty 使用遍历方式处理，效率更高。
 
-- 调用 JDK 底层创建 Selector；
+![avatar](photo_3.png)
+
+- 调用 JDK 底层 API 创建 Selector；
 - 创建一个新线程，使用反射方法获得 SelectorImpl 类对象；
 - 使用反射方法获取 SelectorImpl 类的两个属性 selectedKeys 和 publicSelectedKeys，这两个都使用 hashset 来实现的，使用优化后的数组形式的 keySet 代替它们。
 
