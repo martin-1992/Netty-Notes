@@ -188,7 +188,7 @@
 ![avatar](photo_4.png)
 
 - 创建一个新的 Selector；
-- 将旧 Selector 所有的 Key 和 Key 对应的 Channel、感兴趣的 IO 事件注册到新的 Selector 上，每个 Key 为一个 Channel；
+- 将旧 Selector 所有的 Key 和 Key 对应的 Channel、感兴趣的 IO 事件注册到新的 Selector 上，每个 Key 为一个感兴趣的已就绪 IO 事件的 Channel；
 - 关闭旧的 Selector。
 
 ```java
