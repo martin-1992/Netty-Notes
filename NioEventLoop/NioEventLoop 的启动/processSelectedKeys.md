@@ -63,6 +63,8 @@
 ### NioEventLoop#processSelectedKey
 　　处理该 Channel 已就绪的 IO 事件。
 
+![avatar](photo_2.png)
+
 - key 不合法，关闭该 Channel；
 - key 合法，获取这个 key 已就绪的 IO 事件，有 OP_CONNECT 连接，OP_WRITE 写，OP_READ 读，OP_ACCEPT 新连接事件等；
 - 当 OP_CONNECT 事件已就绪；
