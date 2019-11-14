@@ -5,10 +5,10 @@
 - 将服务端读取到的连接（NioSocketChannel）转为 Channel;
 - 在服务端启动过程，init(channel) 方法中添加用户自定义的 childHandler，该方法会回调用户重写的 ChannelInitializer#initChannel 方法，将自定义的 ChannelHandler 添加至 NioSocketChannel 的 pipeline，并在完成时删除 ChannelInitializer 自身；
 - 设置客户端 Channel 的一些配置；
-- 调用 [childGroup#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 将客户端 Channel 注册到 worker 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector）上，**这里的 childGroup 为 worker 的 NioEventLoopGroup，注册流程和服务端 Channel 注册到 boss 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector）上是类似的。
+- 调用 [childGroup#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 将客户端 Channel 注册到 worker 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector）上，**这里的 childGroup 为 worker 的 NioEventLoopGroup，注册流程和服务端 Channel 注册到 boss 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector）上是类似的。**
     1. 先判断是否在 EventLoop 线程中，这里是 false，所以会放在任务队列中执行；
     2. 调用 doRegister()，将服务端接收到的客户端 Channel 注册到 worker 的 NioEventLoop（Selector） 上；
-    3. 调用 pipeline.invokeHandlerAddedIfNeeded()，回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法是用户重写的，添加用户自定义的 ChannelHandler 到 pipeline 中；
+    3. 调用 pipeline.invokeHandlerAddedIfNeeded()，回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法是用户重写的，添加用户自定义的 ChannelHandler 到客户端的 pipeline 中；
     4. 调用 pipeline.fireChannelRegistered()，回调 channelRegistered 方法；
     5. 调用 pipeline.fireChannelActive()，为客户端 Channel 注册读事件；
     5. 如果不是第一次注册，且设置自动读，为开始读取该客户端 Channel 的数据，通过 pipeline 进行传播处理。
