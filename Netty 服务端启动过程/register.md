@@ -84,8 +84,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
 ### AbstractChannel#register0
 
-- 调用 doRegister() 方法，将新连接 Channel 注册到 EventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例；
-- 当新连接注册到 EventLoop（Selector） 上，第一次注册时会调用 [pipeline.fireChannelActive]() 将读事件注册到 Selector 上。当有数据进来，就会进行数据的读写。
+- 调用 doRegister() 方法，将服务端 Channel 注册到 boss 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例。之后，服务端 Channel 会注册读事件，然后通过 pipeline 在节点 ServerBootstrap 调用 channelRead 方法，将读事件服务端接收到客户端 Channel 的连接。同样是调用该方法，不过是将客户端 Channel 注册到 worker 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector） 上；
+- 调用 pipeline.invokeHandlerAddedIfNeeded()，回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法是用户重写的，添加用户自定义的 ChannelHandler 到 pipeline 中；
+- 当新连接注册到 EventLoop（Selector） 上，第一次注册时会调用 [pipeline.fireChannelActive]() 将读事件注册到 Selector 上。当有客户端连接进来时，会进行处理。
 
 ```java
         private void register0(ChannelPromise promise) {
@@ -100,11 +101,12 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 neverRegistered = false;
                 registered = true;
 
-                // 调用输出 handlerAdded(ChannelHandlerContext ctx)
+                // 回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法
+                // 是用户重写的，添加用户自定义的 ChannelHandler 到 pipeline 中
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);
-                // 调用输出 channelRegistered(ChannelHandlerContext ctx)
+                // 回调 channelRegistered 方法
                 pipeline.fireChannelRegistered();
                 // 新连接，并注册到 EventLoop（Selector） 上，则为 true
                 if (isActive()) {
@@ -126,7 +128,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ```
 
 ### AbstractNioChannel#doRegister
-　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，这里注册的 this 指的是 AbstractNioChannel，将其作为 SelectableChannel 类的附属 attachment，注册到 Selector 上。在 [processSelectedKeys]() 方法中，Selector 轮询 SelectionKey 时，会取出该 key 的 attachment，即 AbstractNioChannel，检查该 AbstractNioChannel 是否有 IO 事件要处理。
+　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，这里注册的 this 指的是 AbstractNioChannel，将其作为 SelectableChannel 类的附属 attachment，注册到 Selector 上。在 [processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 方法中，Selector 轮询 SelectionKey 时，会取出该 key 的 attachment，即 AbstractNioChannel，检查该 AbstractNioChannel 是否有 IO 事件要处理。
 
 ```java
     @Override
