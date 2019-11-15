@@ -84,6 +84,8 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
 ### AbstractChannel#register0
 
+![avatar](photo_2.png)
+
 - 调用 doRegister() 方法，将服务端 Channel 注册到 boss 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例。之后，服务端 Channel 会注册读事件，然后通过 pipeline 在节点 ServerBootstrap 调用 channelRead 方法，将读事件服务端接收到客户端 Channel 的连接。同样是调用该方法，不过是将客户端 Channel 注册到 worker 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector） 上；
 - 调用 pipeline.invokeHandlerAddedIfNeeded()，回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法是用户重写的，添加用户自定义的 ChannelHandler 到 pipeline 中；
 - 当新连接注册到 EventLoop（Selector） 上，第一次注册时会调用 [pipeline.fireChannelActive]() 将读事件注册到 Selector 上。当有客户端连接进来时，会进行处理。
