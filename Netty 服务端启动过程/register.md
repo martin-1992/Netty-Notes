@@ -138,7 +138,8 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         for (;;) {
             try {
                 // 调用 JDK 底层来注册，channel 是通过 AbstractBootstrap#this.channelFactory.newChannel() 
-                // 进行创建的，将 Channel 注册到 Selector 上
+                // 进行创建的，将 Channel 注册到 Selector 上，这里注册为 0，表示对任何事件感兴趣，接下来会
+                // 调用 pipeline.fireChannelActive() 进行读事件注册
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
