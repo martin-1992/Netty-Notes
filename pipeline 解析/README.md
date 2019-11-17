@@ -1,5 +1,9 @@
-```{.python .input}
-### 
+### pipeline 的初始化
+　　在 [实例化 NioServerSocketChannel](https://github.com/martin-1992/Netty-Notes/blob/2571fcbffe2cb9588dddf59e76c9b885a0bf8458/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/NioServerSocketChannel.md) 时会创建 pipeline，使用哨兵模式，默认添加两个节点 [HeadContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/HeadContext.md) 和 [TailContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/TailContext.md)。
 
+### [添加 ChannelHandler](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/%E6%B7%BB%E5%8A%A0%20ChannelHandler/README.md)
 
-```
+- [checkMultiplicity]()，判断 ChannelHandler 是否能重复添加，即一个 ChannelHandler 添加到多个 Channel 里。如果 Handler 不为共享式，且已添加，则抛出异常；
+- [newContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/%E6%B7%BB%E5%8A%A0%20ChannelHandler/newContext.md)，将 ChannelHandler 包装成节点 ChannelHandlerContext（[pipeline 的初始化](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/pipeline%20%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96.md)使用哨兵模式，添加 [HeadContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/HeadContext.md) 和 [TailContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/TailContext.md)，使用变量保存 handler、pipeline、executor、inbound、outbound；
+- [addLast0](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/%E6%B7%BB%E5%8A%A0%20ChannelHandler/addLast0.md)，将包装好的节点 ChannelHandlerContext，插入到链表 pipeline 中。InBound 和 OutBound 事件的传播都是通过遍历链表进行的，InBound 从 head 节点开始往后传播，OutBound 从 tail 节点开始往前传播；
+- [callHandlerAdded0](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/%E6%B7%BB%E5%8A%A0%20ChannelHandler/callHandlerAdded0.md)，添加成功后，会回调用户重写的 initChannel 方法。
