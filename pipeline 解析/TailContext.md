@@ -12,7 +12,6 @@
         }
     }
     
-    
     AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor, String name,
                                   boolean inbound, boolean outbound) {
         this.name = ObjectUtil.checkNotNull(name, "name");
