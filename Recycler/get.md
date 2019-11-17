@@ -29,7 +29,7 @@
 
 
 ### stack#pop
-　　stack 为 Recycler 的内置类，从栈中弹出 DefaultHandle，获取该对象。如果栈为空，则调用 [scavenge]() 方法从其它线程的 WeakOrderQueue 中回收 DefaultHandle 对象。
+　　stack 为 Recycler 的内置类，从栈中弹出 DefaultHandle，获取该对象。如果栈为空，则调用 [scavenge](https://github.com/martin-1992/Netty-Notes/blob/master/Recycler/scavenge.md) 方法从当前线程 Stack 对应的 WeakOrderQueue 链表回收 DefaultHandle 对象。WeakOrderQueue 链表包含每个线程创建的 WeakOrderQueue 节点，比如 WeakOrderQueue（线程 D）-> WeakOrderQueue（线程 B）-> WeakOrderQueue（线程 C） 等。
 
 ```java
         @SuppressWarnings({ "unchecked", "rawtypes" })

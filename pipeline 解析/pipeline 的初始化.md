@@ -1,4 +1,4 @@
-###
+### pipeline 的初始化
 　　示例代码中，实例化 [NioServerSocketChannel](https://github.com/martin-1992/Netty-Notes/blob/2571fcbffe2cb9588dddf59e76c9b885a0bf8458/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/NioServerSocketChannel.md) 时会创建 pipeline。
 
 ```java
@@ -29,7 +29,7 @@ b.group(bossGroup, workerGroup)
 ```
 
 ### DefaultChannelPipeline 的构造函数
-　　pipeline 默认情况下会创建两个节点 [head]() 和 [tail]()，使用哨兵模式，为双向链表。
+　　pipeline 默认情况下会创建两个节点 [HeadContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/HeadContext.md) 和 [TailContext](https://github.com/martin-1992/Netty-Notes/blob/master/pipeline%20%E8%A7%A3%E6%9E%90/TailContext.md)，使用哨兵模式，为双向链表。
 
 ```java
     protected DefaultChannelPipeline(Channel channel) {
