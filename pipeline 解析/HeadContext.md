@@ -64,13 +64,10 @@
             return;
         }
 
-        // See: https://github.com/netty/netty/issues/576
         if (Boolean.TRUE.equals(config().getOption(ChannelOption.SO_BROADCAST)) &&
             localAddress instanceof InetSocketAddress &&
             !((InetSocketAddress) localAddress).getAddress().isAnyLocalAddress() &&
             !PlatformDependent.isWindows() && !PlatformDependent.maybeSuperUser()) {
-            // Warn a user about the fact that a non-root user can't receive a
-            // broadcast packet on *nix if the socket is bound on non-wildcard address.
             logger.warn(
                     "A non-root user can't receive a broadcast packet if the socket " +
                     "is not bound to a wildcard address; binding to a non-wildcard " +
@@ -116,13 +113,12 @@
     }
 ```
 
-### DefaultChannelPipeline#handler 
-　　读取数据
+### DefaultChannelPipeline#read 
+　　调用 [read](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/DefaultChannelPipeline%23read.md) 读取数据。
 
 ```java
     @Override
     public void read(ChannelHandlerContext ctx) {
-        // 调用 AbstractChannel 的，读取数据
         unsafe.beginRead();
     }
         
@@ -176,30 +172,3 @@
     }
 ```
 
-### DefaultChannelPipeline#connect
-　　同样是调用 JDK 底层 API 的方法。
-
-```java
-    @Override
-    public void connect(
-            ChannelHandlerContext ctx,
-            SocketAddress remoteAddress, SocketAddress localAddress,
-            ChannelPromise promise) {
-        unsafe.connect(remoteAddress, localAddress, promise);
-    }
-
-            @Override
-    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) {
-        unsafe.disconnect(promise);
-    }
-
-    @Override
-    public void close(ChannelHandlerContext ctx, ChannelPromise promise) {
-        unsafe.close(promise);
-    }
-
-    @Override
-    public void deregister(ChannelHandlerContext ctx, ChannelPromise promise) {
-        unsafe.deregister(promise);
-    }
-```
