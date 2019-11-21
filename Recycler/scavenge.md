@@ -18,6 +18,8 @@
 
 ### stack#scavengeSome
 
+![avatar](photo_6.png)
+
 - 判断，如果该 Stack 没有对应的 WeakOrderQueue，则返回；
 - 遍历包含 WeakOrderQueue 节点（线程）的链表，如果某个节点（线程）已经被销毁，则尝试将 WeakOrderQueue 中的对象添加到 Stack 中，从链表中删除该 WeakOrderQueue 节点（线程），比如 WeakOrderQueue -> WeakOrderQueue(删除） -> WeakOrderQueue；
 - 调用 transfer，将该节点（线程） WeakOrderQueue 中的对象添加到当前线程 Stack 中，WeakOrderQueue 是由多个 Link 组成，读取 Link，将 Link 中的对象添加到 Stack 中。

@@ -1,8 +1,10 @@
 ### Recycler#get
 
+![avatar](photo__1.png)
+
 - maxCapacityPerThread 为 0，则直接创建对象，用完不回收；
 - maxCapacityPerThread 不为 0，则获取对象池的副本；
-- 从对象池的副本中获取对象（handle.value），为空则调用用户重写的 newObject 方法创建对象，将该对象注册到 handle.value，然后通过 handle 来获取对象。
+- 从对象池的副本中获取对象（handle.value），为空则调用用户重写的 newObject 方法创建对象，对象绑定当前线程的 Stack，将该对象注册到 handle.value，然后通过 handle 来获取对象。
 
 ```java
     @SuppressWarnings("unchecked")

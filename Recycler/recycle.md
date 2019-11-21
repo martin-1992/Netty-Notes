@@ -41,8 +41,10 @@
 
 ### stack#pushNow
 
+![avatar](photo_2.png)
+
 - 先判断是否已经回收了，是则抛出异常，防止多次回收；
-- 对象池 stack 已经达到最大保存容量，即不能在回收新对象了；
+- 对象池 stack 已经达到最大保存容量，或者是第 n 个要回收的对象不为 7 的倍数（控制回收频率，只回收八分之一的对象），则丢弃，不在回收新对象；
 - 对象池 stakc (DefaultHandle 数组) 满了，则进行扩容；
 - 回收对象，容量加一。
 
@@ -91,6 +93,8 @@
 
 ### stack#pushLater
 
+![avatar](photo_3.png)
+
 - 获取 WeakOrderQueue，用于存放在其它线程创建的对象。比如线程 A 创建对象，线程 B 回收该对象，把该对象放在线程 B 的 WeakOrderQueue（通过线程 A 的 stack 为 key 来获取）。以此类推，线程 C 回收线程 A 的对象，则放在线程 C 的 WeakOrderQueue（通过线程 A 的 stack 为 key 来获取）；
 - 如果 WeakOrderQueue 为空，则创建 WeakOrderQueue，将线程 A 的 stack 和线程 B 创建的 WeakOrderQueue 进行绑定，以后可通过 key（线程 A 的 stack）来获取 WeakOrderQueue；
 - 将在线程 B 要回收的对象添加到 WeakOrderQueue。
@@ -134,6 +138,8 @@
 
 ### stack#allocate
 　　容量足够时，调用 newQueue 创建队列，LINK_CAPACITY 默认为 16，不足时则丢弃该对象回收，WeakOrderQueue 队列结构是为 Link 的链表结构，即有多个 Link 节点，每个 Link 为 16 个单位，允许存放回收 16 个对象（handle），这样就不用每次回收对象都要判断内存是否足够回收，而是每当一个 Link 满了以后，再判断是否能创建下一个 16 单位的 Link，减少操作。
+
+![avatar](photo_4.png)
 
 ```java
     static WeakOrderQueue allocate(Stack<?> stack, Thread thread) {
