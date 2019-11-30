@@ -3,9 +3,9 @@
 
 - defaultPageSize，默认 page 大小为 8k（8192）；
 - defaultMaxOrder，二叉树高度，默认为 11。8192 << 11 为一个 16M 的 chunk，Netty 中可复用的最大一段连续内存。即 2048（2^11）个 8k 的page 组成一个 16M 的 chunk；
-- DEFAULT_TINY_CACHE_SIZE，tiny 大小的 ByteBuf 有 512 个，可写入 0 ~ 512B 的数据；
-- DEFAULT_SMALL_CACHE_SIZE，small 大小的 ByteBuf 有 256 个，可写入 512B ~ 8K 的数据；
-- DEFAULT_NORMAL_CACHE_SIZE，normal 大小的 ByteBuf 有 64 个，可写入 8K ~ 16M 的数据；
+- DEFAULT_TINY_CACHE_SIZE，tiny 大小的 ByteBuf 队列（PoolThreadCache#MemoryRegionCache 创建的 MpscArrayQueue），默认长度为 512，可写入 0 ~ 512B 的数据；
+- DEFAULT_SMALL_CACHE_SIZE，small 大小的 ByteBuf 队列，默认长度为 256，可写入 512B ~ 8K 的数据；
+- DEFAULT_NORMAL_CACHE_SIZE，normal 大小的 ByteBuf 队列，默认长度为 64，可写入 8K ~ 16M 的数据；
 
 ```java
     private static final int DEFAULT_PAGE_SIZE;
@@ -49,11 +49,11 @@
                                 defaultMinNumArena,
                                 PlatformDependent.maxDirectMemory() / defaultChunkSize / 2 / 3)));
 
-        // tiny 大小的 ByteBuf 有 512 个
+        // tiny 大小的 ByteBuf 队列，默认长度为 512
         DEFAULT_TINY_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.tinyCacheSize", 512);
-        // small 大小的 ByteBuf 有 256 个
+        // small 大小的 ByteBuf 队列，默认长度为 256
         DEFAULT_SMALL_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.smallCacheSize", 256);
-        // normal 大小的 ByteBuf 有 64 个
+        // normal 大小的 ByteBuf 队列，默认长度为 64
         DEFAULT_NORMAL_CACHE_SIZE = SystemPropertyUtil.getInt("io.netty.allocator.normalCacheSize", 64);
 
         // ...
