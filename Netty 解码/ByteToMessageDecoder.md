@@ -4,11 +4,13 @@
 ### ByteToMessageDecoder#channelRead
 　　在 pipeline 每个节点 ChannelHandlerContext，都会调用 ChannelRead() 进行解码处理。
 
+![avatar](photo_1.png)
+
 - 创建列表，用于存放解码后的对象，通过列表可获取到一个个解析对象，传播到下个节点；
 - 将读取到的二进制流数据累加到累加器中；
 - 调用 callDecode，对累加器（二进制流数据）进行解码处理，解码成对象添加到对象列表中；
 - 调用 [fireChannelRead](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E8%A7%A3%E7%A0%81/fireChannelRead.md) 将对象列表传播到下个节点；
-- 清空对象列表中的对象，即遍历对象列表，将每个对象置为 null；
+- 清空对象列表中的对象，即遍历对象列表，将每个对象置为 null，并回收对象列表；
 
 ```java
     @Override
@@ -65,6 +67,8 @@
 
 
 ### ByteToMessageDecoder#callDecode
+
+![avatar](photo_2.png)
 
 - 先检查，如果对象列表 out 中有对象，先传播到下个节点；
 - 传播完成后，清空当前对象列表 out 的对象（置为 null）；
