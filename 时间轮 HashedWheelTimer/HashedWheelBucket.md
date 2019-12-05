@@ -54,7 +54,7 @@
 ```
 
 ### expireTimeouts
-　　 [HashedWheelTimeout#expire]()，使用 CAS 设置定时任务状态为已过期，并调用 worker 线程执行定时任务。
+　　 [HashedWheelTimeout#expire](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/HashedWheelTimeout.md)，使用 CAS 设置定时任务状态为已过期，并调用 worker 线程执行定时任务。
 
 ```java
     public void expireTimeouts(long deadline) {
