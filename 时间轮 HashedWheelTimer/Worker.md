@@ -6,7 +6,7 @@
 
 - 唤醒阻塞在 start() 的线程，因为只允许一个线程执行，所以不用同步方法；
 - 需要 sleep 到下一个格子检查定时任务的时间；
-- 从任务队列中获取定时任务，根据定时时间计算格子索引，存入对应的格子中；
+- 从任务队列中获取定时任务，根据定时时间计算格子索引，存入对应的格子 [HashedWheelBucket](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/HashedWheelBucket.md)；
 - 遍历该格子，执行定时任务；
 - 移到下个格子，重复第二步到第三步，先 sleep 到下个格子的时间。（这里有可能执行任务过久，导致超过了下个格子的时间）；
 - 遍历执行完所有格子的定时任务后，将每个格子中未过期和未取消的定时任务重新添加到待处理的任务队列 unprocessedTimeouts；
