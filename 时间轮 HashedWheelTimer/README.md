@@ -1,7 +1,7 @@
 ### 构造函数
 
-- 创建时间轮，在 newTimeout 方法中启动；
-- 创建 worker 线程，在 newTimeout 方法中会启动 worker 线程，遍历时间轮的所有格子，执行定时任务。
+- [createWheel](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/createWheel.md)，创建时间轮，在 newTimeout 方法中启动；
+- threadFactory.newThread(worker)，创建 [worker](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/Worker.md) 线程，在 newTimeout 方法中会启动 worker 线程，遍历时间轮的所有格子，执行定时任务。
 
 ```java
     public HashedWheelTimer(
@@ -74,7 +74,7 @@
 ```
 
 ### newTimeout
-　　启动时间轮，计算定时任务的定时时间，将定时任务包装成 HashedWheelTimeout 类，添加到定时任务队列，由 work 线程从定时任务队列中添加到对应的格子中。
+　　启动 [start](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/start.md) 时间轮，计算定时任务的定时时间，将定时任务包装成 [HashedWheelTimeout](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/HashedWheelTimeout.md) 类，添加到定时任务队列，由 work 线程从定时任务队列中添加到对应的格子中。
 
 ```java
     @Override
