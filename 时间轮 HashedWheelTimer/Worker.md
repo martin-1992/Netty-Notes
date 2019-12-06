@@ -8,10 +8,12 @@
 - 需要 sleep 到下一个格子检查定时任务的时间；
 - 从任务队列中获取定时任务，根据定时时间计算格子索引，存入对应的格子 [HashedWheelBucket](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer/HashedWheelBucket.md)；
 - 遍历该格子，执行定时任务；
+    1. 先判断剩余轮数是否小于等于 0，如果大于 0，表示不在这轮执行的，比如前面提到的 180ms 的任务。对轮数 remainingRounds 减一，这样下轮就可执行该 180ms 的任务；
+    2. 如果剩余轮数小于等于 0，则执行定时任务。
 - 移到下个格子，重复第二步到第三步，先 sleep 到下个格子的时间。（这里有可能执行任务过久，导致超过了下个格子的时间）；
-- 遍历执行完所有格子的定时任务后，将每个格子中未过期和未取消的定时任务重新添加到待处理的任务队列 unprocessedTimeouts；
+- 当 worker 线程关闭后，会将每个格子中未过期和未取消的定时任务重新添加到待处理的任务队列 unprocessedTimeouts；
 - 从定时任务队列中获取定时任务添加到待处理的任务队列 unprocessedTimeouts；
-- 从格子中移除已取消的定时任务，
+- 从格子中移除已取消的定时任务。
 
 ```java
     // 待处理（执行）的定时任务集合
