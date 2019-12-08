@@ -84,7 +84,8 @@
             // 使用位运算，小于 512 是 tiny，而 512 到 pageSize 则为 small
             boolean tiny = isTiny(normCapacity);
             if (tiny) { // < 512
-                // allocateTiny、allocateSmall、allocateNormal 处理逻辑都类似
+                // allocateTiny、allocateSmall、allocateNormal 处理逻辑都类似，
+                // 如果没有缓存对象，则需要创建缓存对象，在内存中分配
                 if (cache.allocateTiny(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
