@@ -13,9 +13,8 @@
     }
 ```
 
-
 ### PoolArena#newByteBuf
-　　默认情况下，是有 Unsafe 的，即调用 PooledUnsafeDirectByteBuf。
+　　以 DirectArena 为例，默认情况下，是有 Unsafe 的，即调用 PooledUnsafeDirectByteBuf。
 
 ```java
         @Override
@@ -29,31 +28,29 @@
         }
 ```
 
-
 #### PooledUnsafeDirectByteBuf#newInstance
-　　
-- [Recycler#get]()，获取 ByteBuf 对象，如果没有，则直接创建；
-- [PooledByteBuf#reuse]()，初始化 ByteBuf 对象，即重置读写指针、重置读写指针的标记值等。
+
+- [Recycler#get](https://github.com/martin-1992/Netty-Notes/blob/master/Recycler/get.md)，获取 ByteBuf 对象，如果没有，则直接创建。PooledUnsafeDirectByteBuf 实现了 newObject 方法，当从对象池中没有获取到对象时，会调用该方法创建对象，具体可看 Recycler#get；
+- PooledByteBuf#reuse，初始化 ByteBuf 对象，即重置读写指针、重置读写指针的标记值等，脏数据仍存在。
 
 ```java
-    // ByteBuf 的对象池
-    private static final Recycler<PooledUnsafeDirectByteBuf> RECYCLER = new Recycler<PooledUnsafeDirectByteBuf>() {
-        @Override
-        protected PooledUnsafeDirectByteBuf newObject(Handle<PooledUnsafeDirectByteBuf> handle) {
-            // 如果没对应的 ByteBuf 对象，则直接创建，对象是绑定在 handle.value 上，
-            // 由 handle 调用 recycle 方法来回收对象
-            return new PooledUnsafeDirectByteBuf(handle, 0);
-        }
-    };
-
     static PooledUnsafeDirectByteBuf newInstance(int maxCapacity) {
         // 获取 ByteBuf 对象，如果没有，则直接创建
         PooledUnsafeDirectByteBuf buf = RECYCLER.get();
-        // 可能是回收站里拿出来的，进行复用，设置读写指针、最大扩容容量等
+        // 设置读写指针、最大扩容容量等
         buf.reuse(maxCapacity);
         // 获取初始化好的 ByteBuf
         return buf;
     }
+
+    private static final Recycler<PooledUnsafeDirectByteBuf> RECYCLER = new Recycler<PooledUnsafeDirectByteBuf>() {
+        @Override
+        protected PooledUnsafeDirectByteBuf newObject(Handle<PooledUnsafeDirectByteBuf> handle) {
+            // 如果没对应的 ByteBuf 对象，则调用 newObject 方法直接创建，对象是绑定
+            // 在 handle.value 上，由 handle 调用 recycle 方法来回收对象
+            return new PooledUnsafeDirectByteBuf(handle, 0);
+        }
+    };
     
     /**
      * PooledByteBuf#reuse
@@ -70,12 +67,11 @@
     }
 ```
 
-
 ### PoolArena#allocate
 
 - 标准化请求的内存容量，为 2 的次方，从大到小来判断；
-- 缓存上进行内存分配；
-- 内存堆上进行内存分配。
+- 如果对象池中有可使用的缓存对象，则获取缓存对象，进行内存分配；
+- 没有，则内存堆上进行内存分配。
 
 ```java
     private void allocate(PoolThreadCache cache, PooledByteBuf<T> buf, final int reqCapacity) {
@@ -88,8 +84,8 @@
             // 使用位运算，小于 512 是 tiny，而 512 到 pageSize 则为 small
             boolean tiny = isTiny(normCapacity);
             if (tiny) { // < 512
-                // allocateTiny、allocateSmall、allocateNormal 处理逻辑都类似
-
+                // allocateTiny、allocateSmall、allocateNormal 处理逻辑都类似，
+                // 如果没有缓存对象，则需要创建缓存对象，在内存中分配
                 if (cache.allocateTiny(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -107,10 +103,6 @@
 
             final PoolSubpage<T> head = table[tableIdx];
 
-            /**
-             * Synchronize on the head. This is needed as {@link PoolChunk#allocateSubpage(int)} and
-             * {@link PoolChunk#free(long)} may modify the doubly linked list as well.
-             */
             synchronized (head) {
                 final PoolSubpage<T> s = head.next;
                 if (s != head) {
@@ -143,7 +135,7 @@
                 ++allocationsNormal;
             }
         } else {
-            // 如果分配的内存 normCapacity 大于 chunkSize，则使用 allocateHuge 在内存上分配
+            // 如果分配的内存 normCapacity 大于 chunkSize，则使用 allocateHuge 直接在内存上分配
             // Huge allocations are never served via the cache so just call allocateHuge
             allocateHuge(buf, reqCapacity);
         }
