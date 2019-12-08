@@ -1,6 +1,6 @@
 ### PoolThreadCache#allocateTiny
 
-- cacheForTiny，找到 MemoryRegionCache 的节点；
+- cacheForTiny，根据请求容量 normCapacity 找到对应的 MemoryRegionCache 的节点。tiny 是按 16（>>4） 的倍数来划分的，即 null、16B、32B、48B，直到 496B，有 512 个。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配；
 - allocate，分配缓存。
 
 ```java
@@ -10,9 +10,8 @@
     }
 ```
 
-
 ### PoolThreadCache#cacheForTiny
-　　根据请求容量获取分配在内存数组中的位置，比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。
+　　根据请求容量获取分配在内存数组中的位置，因为 tinySubPageDirectCaches 是按 16B、32B、48B... 来分配的。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配。索引 1 为 16B，索引 2 为 32B。
 
 ```java
     private MemoryRegionCache<?> cacheForTiny(PoolArena<?> area, int normCapacity) {
@@ -23,25 +22,21 @@
         if (area.isDirect()) {
             return cache(tinySubPageDirectCaches, idx);
         }
-        // 堆内内存 tiny 数组
+        // 堆内内存 tiny 数组，为 MemoryRegionCache 对象的数组
         return cache(tinySubPageHeapCaches, idx);
     }
-```
-
-
-#### PoolArena#tinyIdx
-　　把 normCapacity 除以 16，因为 tiny 的数组是按 16 的倍数排的，比如 tiny[1]=16B，tiny[2]=32B，tiny[3]=48B，这样如果是 32B，则 32 除以 16，取第二个。
-
-```java
+    
+    /**
+     * 把 normCapacity 除以 16，因为 tiny 的数组是按 16 的倍数排的，比如 tiny[1]=16B，tiny[2]=32B，
+     * tiny[3]=48B，这样如果是 32B，则 32 除以 16，取第二个
+     */
     static int tinyIdx(int normCapacity) {
         return normCapacity >>> 4;
     }
 ```
 
-
-#### PoolThreadCache#cacheForTiny
-
--
+#### PoolThreadCache#cache
+　　获取该索引下的 MemoryRegionCache。
 
 ```java
     private static <T> MemoryRegionCache<T> cache(MemoryRegionCache<T>[] cache, int idx) {
@@ -54,21 +49,23 @@
     }
 ```
 
-
 ### allocate
+
+- [cache.allocate](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache)，MemoryRegionCache 绑定一个队列，从该队列获取一个对象 Entry 给 ByteBuf，进行初始化。
+- trim，释放 MemoryRegionCache 数组中没有分配给 ByteBuf 的内存，防止内存泄漏。
 
 ```java
     private boolean allocate(MemoryRegionCache<?> cache, PooledByteBuf buf, int reqCapacity) {
         if (cache == null) {
             return false;
         }
-        // 获取到节点 MemoryRegionCache，需要从该节点的 queue 里弹出一个 entry 给 ByteBuf
+        // MemoryRegionCache 绑定一个队列，从该队列获取一个对象 Entry 给 ByteBuf，进行初始化
         boolean allocated = cache.allocate(buf, reqCapacity);
         if (++ allocations >= freeSweepAllocationThreshold) {
             allocations = 0;
+            // 释放
             trim();
         }
         return allocated;
     }
 ```
-
