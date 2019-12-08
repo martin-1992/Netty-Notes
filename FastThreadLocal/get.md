@@ -1,6 +1,6 @@
 ### get
 
-- 调用 [get]() 获取当前线程实例对应的 InternalThreadLocalMap;
+- 调用 [get](https://github.com/martin-1992/Netty-Notes/blob/master/FastThreadLocal/InternalThreadLocalMap/get.md) 获取当前线程实例对应的 InternalThreadLocalMap;
 - indexedVariable()，为当前线程对应的 InternalThreadLocalMap 中的一个 Object 数组，存储本地变量。一个 FastThreadLoacal 实例绑定一个 index 索引值，根据索引值获取数组中对应的变量值；
 - 如果获取的值为默认值 UNSET，则调用 initialize 方法初始化 InternalThreadLocalMap，将值插入到数组 InternalThreadLocalMap 中。
 
@@ -29,7 +29,7 @@
 ```
 
 #### FastThreadLocal#initialize
-　　初始化，调用 [setIndexedVariable]() 将初始值插入数组 indexedVariables 中。
+　　初始化，调用 [setIndexedVariable](https://github.com/martin-1992/Netty-Notes/blob/master/FastThreadLocal/InternalThreadLocalMap/setIndexedVariable.md) 将初始值插入数组 indexedVariables 中。
 
 ```java
     private V initialize(InternalThreadLocalMap threadLocalMap) {

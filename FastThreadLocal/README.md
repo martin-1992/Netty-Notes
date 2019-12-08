@@ -1,7 +1,10 @@
 ### FastThreadLocal 分析
-　　Netty 中 FastThreadLocal 用来代替 ThreadLocal 存放线程本地变量，原先的 ThreadLoacal 使用弱引用的 ThreadLoacalMap，存在内存泄漏的可能。Netty 不使用弱引用的 ThreadLocalMap，不存在该问题，且性能更快。<br />
-　　FastThreadLocal 使用 InternalThreadLocalMap 来存放数据，和 ThreadLocal 实现方式类似，FastThreadLocalThread 中有一个 InternalThreadLocalMap 类型的字段 threadLocalMap，这样一个线程对应一个 InternalThreadLocalMap 实例，该线程下所有的线程本地变量都会放在 threadLocalMap 中的数组 indexedVariables 中。<br />
-　　FastThreadLocal 使用数组来存放变量，**原生的 ThreadLocal 底层也是数组形式，但是使用哈希加线性探测法来实现的，** 当数据量大时或遇到哈希冲突时，ThreadLocal 没有 FastThreadLocal 快。
+　　Netty 中 FastThreadLocal 用来代替 ThreadLocal 存放线程本地变量，FastThreadLocal 相比 ThreadLocal 有两个优势。
+
+- 原先的 ThreadLoacal 使用弱引用的 ThreadLoacalMap，存在内存泄漏的可能。Netty 不使用弱引用的 ThreadLocalMap，不存在该问题；
+- FastThreadLocal 使用数组来存放变量，**原生的 ThreadLocal 底层也是数组形式，但是使用哈希加线性探测法来实现的，** 当数据量大时或遇到哈希冲突时，ThreadLocal 没有 FastThreadLocal 快。
+
+　　FastThreadLocal 使用 InternalThreadLocalMap 来存放数据，和 ThreadLocal 实现方式类似，FastThreadLocalThread 中有一个 InternalThreadLocalMap 类型的字段 threadLocalMap，这样一个线程对应一个 InternalThreadLocalMap 实例，该线程下所有的线程本地变量都会放在 threadLocalMap 中的数组 indexedVariables 中。
 
 ### FastThreadLocal 的构造函数
 
@@ -34,3 +37,8 @@
     }
 ```
 
+### [get](https://github.com/martin-1992/Netty-Notes/blob/master/FastThreadLocal/get.md)
+　　获取当前线程的 InternalThreadLocalMap 存储的对象。
+
+### [set](https://github.com/martin-1992/Netty-Notes/blob/master/FastThreadLocal/set.md)
+　　将对象存储到当前线程的 InternalThreadLocalMap 中。
