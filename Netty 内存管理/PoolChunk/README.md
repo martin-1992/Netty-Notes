@@ -30,7 +30,6 @@ final class PoolChunk<T> implements PoolChunkMetric {
     private final byte[] depthMap;
     // PoolSubpage 数组
     private final PoolSubpage<T>[] subpages;
-    /** Used to determine if the requested capacity is equal to or greater than pageSize. */
     // 判断分配请求内存是否为 Tiny/Small，即分配 Subpage 内存块
     private final int subpageOverflowMask;
     // Page 大小，默认 8KB = 8192B
@@ -45,17 +44,12 @@ final class PoolChunk<T> implements PoolChunkMetric {
     private final int chunkSize;
     // 默认为 log2(16M) = 24
     private final int log2ChunkSize;
-    // 可分配 {@link #subpages} 的数量，即数组大小。默认为 1 << maxOrder = 1 << 11 = 2048 。
+    // Subpage 数量，即二叉树最底层（深度 11）的数量，默认为 1 << 11 = 2048
     private final int maxSubpageAllocs;
-    /** Used to mark memory as unusable */
-    // 标记节点不可用。默认为 maxOrder + 1 = 12 。
+    // 标记节点不可用，默认为 maxOrder + 1 = 12，因为节点信息为 [0-11]，值越大，
+    // 表示可用内存值越大，0 为 16M，11 为 8K，12 则不可用
     private final byte unusable;
 
-    // Use as cache for ByteBuffer created from the memory. These are just duplicates and so are only a container
-    // around the memory itself. These are often needed for operations within the Pooled*ByteBuf and so
-    // may produce extra GC, which can be greatly reduced by caching the duplicates.
-    //
-    // This may be null if the PoolChunk is unpooled as pooling the ByteBuffer instances does not make any sense here.
     private final Deque<ByteBuffer> cachedNioBuffers;
     // 剩余可用字节数
     private int freeBytes;
@@ -70,13 +64,10 @@ final class PoolChunk<T> implements PoolChunkMetric {
     //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
 ```
 
-### 构造函数
-　　分为池化和非池化两种。
+### 构造函数（池化）
+　　默认为池化，即可从对象池中获取和回收。
 
 ```java
-    /**
-     * 构造函数，池化
-     **/
     PoolChunk(PoolArena<T> arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset) {
         // 默认为池化
         unpooled = false;
@@ -106,7 +97,7 @@ final class PoolChunk<T> implements PoolChunkMetric {
         int memoryMapIndex = 1;
         // 遍历每层，从 0 到 11 层，填充 memoryMap 和 depthMap 的值，为 [0, 1, 1, 2, 2, 2, 2, 3, ..., 11]，
         // 最后一层有 2048 个 11
-        for (int d = 0; d <= maxOrder; ++ d) { // move down the tree one level at a time
+        for (int d = 0; d <= maxOrder; ++ d) {
             int depth = 1 << d;
             // 对每层的节点进行初始化，第 0 层有 1 << 0 = 1 个节点，第 1 层有 2 个节点，第 2 层有 4 个节点
             for (int p = 0; p < depth; ++ p) {
@@ -123,10 +114,12 @@ final class PoolChunk<T> implements PoolChunkMetric {
         // 初始化缓存 NioBuffer
         cachedNioBuffers = new ArrayDeque<ByteBuffer>(8);
     }
+```
 
-    /**
-     * 构造函数，非池化
-     **/
+### 构造函数（非池化）
+　　非池化，即不从对象池中获取对象。
+
+```java
     PoolChunk(PoolArena<T> arena, T memory, int size, int offset) {
         unpooled = true;
         this.arena = arena;
