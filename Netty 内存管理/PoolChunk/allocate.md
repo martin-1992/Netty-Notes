@@ -1,5 +1,11 @@
 ### allocate
-　　分配内存，判断请求容量是否大于等于 pagSize，是则分配 page，否则分配 subPage。
+
+- 分配内存，判断请求容量是否大于等于 pagSize，获取节点编号；
+    1. 请求容量大于等于 pagSize，调用 [allocateRun](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolChunk/allocateRun.md)；
+    2. 请求容量小于 pagSize，调用 [allocateSubpage](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolChunk/allocateSubpage.md)。
+- 初始化 ByteBuf。
+    1. [buf.init]()，内存块大于等于 Page，初始化 Page 内存块到 PooledByteBuf 中；
+    2. initBufWithSubpage，内存块小于 Page，初始化 SubPage 内存块到 PooledByteBuf 中。
 
 ```java
     private final Deque<ByteBuffer> cachedNioBuffers;
@@ -12,7 +18,7 @@
         // 判断请求容量是否大于等于 pagSize，是则分配 page，否则分配 subPage
         if ((normCapacity & subpageOverflowMask) != 0) {
             // 获取节点值
-            handle =  allocateRun(normCapacity);
+            handle = allocateRun(normCapacity);
         } else {
             // 获取节点值
             handle = allocateSubpage(normCapacity);
@@ -29,8 +35,8 @@
 
 ### initBuf
 
-- [buf.init]()，初始化 Page 内存块到 PooledByteBuf 中；
-- initBufWithSubpage，初始化 SubPage 内存块到 PooledByteBuf 中。
+- [buf.init]()，内存块大于等于 Page，初始化 Page 内存块到 PooledByteBuf 中；
+- initBufWithSubpage，内存块小于 Page，初始化 SubPage 内存块到 PooledByteBuf 中。
 
 ```java
     void initBuf(PooledByteBuf<T> buf, ByteBuffer nioBuffer, long handle, int reqCapacity) {
