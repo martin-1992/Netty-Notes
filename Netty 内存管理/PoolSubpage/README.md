@@ -2,6 +2,8 @@
 　　bitmap 为 long 对象的数组，是 Subpage 的分配情况表。long 对象为 64 位，可记录 64 个 Subpage 是否分配，分配则该 long 对象对应的某位为 1，没分配则为 0。<br />
 　　假设 Subpage 为 16B，一个 Page 默认大小为 8K，可分配 8 * 1024 / 16 = 512 个 Subpage，bitmap 数组大小为 512 / 64 = 8。如果 Subpage 为 32B，则可分配 256 个 Subpage，bitmap 数组大小为 256 / 64 = 4。
 
+![avatar](photo_1.png)
+
 ```java
 final class PoolSubpage<T> implements PoolSubpageMetric {
 
@@ -37,7 +39,10 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
 ```
 
 ### 构造函数
-　　调用 [init]() 方法
+　　调用 [init](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolSubpage/init.md) 方法。
+
+- 初始化 bitmap，根据 Subpage 大小来定义 bitmap 数组的长度 bitmapLength；
+- 将创建的节点 head 添加到链表中。
 
 ```java
     /**
@@ -62,7 +67,7 @@ final class PoolSubpage<T> implements PoolSubpageMetric {
         this.pageSize = pageSize;
         // 创建 bitmap 数组，page 大小默认为 8K，8192 >>> 10 = 8
         bitmap = new long[pageSize >>> 10];
-        //
+        // 初始化 bitma，将创建的节点 head 添加到链表中。
         init(head, elemSize);
     }
 }
