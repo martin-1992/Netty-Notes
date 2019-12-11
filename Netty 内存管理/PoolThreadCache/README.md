@@ -1,6 +1,10 @@
 ### PoolThreadCache
+　　有两种结构，为 [PoolArena](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolArena) 和 [MemoryRegionCache](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache)，如下图。
+
+![avatar](photo_1.png)
+
 　　PoolThreadCache 为每个线程维护一个缓存对象的列表，该列表有 tiny、small 和 normal 三种类型的缓存，这三种是预先申请的。而大于 16M 的，则由 JVM 直接申请内存。<br />
-　　缓存是以数组形式 byte[] 申请的，一个 [MemoryRegionCache]() 包含一个队列。一个队列的长度由缓存的类型决定，比如 tiny 的 MemoryRegionCache，其队列长度为 512，small 的 MemoryRegionCache 队列长度为 256，normal 的 MemoryRegionCache 队列长度为 64。<br />
+　　缓存是以数组形式 byte[] 申请的，一个 MemoryRegionCache 包含一个队列。一个队列的长度由缓存的类型决定，比如 tiny 的 MemoryRegionCache，其队列长度为 512，small 的 MemoryRegionCache 队列长度为 256，normal 的 MemoryRegionCache 队列长度为 64。<br />
 　　缓存又分为堆内 heap 和堆外 direct，使用堆外，需要手动释放内存，因为不是由 JVM 管理的。
 
 ```java
@@ -10,7 +14,7 @@ final class PoolThreadCache {
     
     // 堆内的内存分配器
     final PoolArena<byte[]> heapArena;
-    // 堆外的内存分配器
+    // 堆外（直接）的内存分配器
     final PoolArena<ByteBuffer> directArena;
 
     // Hold the caches for the different size classes, which are tiny, small and normal.
