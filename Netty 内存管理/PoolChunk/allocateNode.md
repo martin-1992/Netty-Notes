@@ -1,17 +1,20 @@
 ### allocateNode
-　　
+
 - 从根节点开始往下遍历，不断获取层级值 val，直到 val >= d，返回该 val。比如 d 为 5，则获取的 val 为 5，则退出循环；
-- 然后一级一级往上更新父节点的层级值。
+- 然后一级一级往上更新父节点的层级值；
+- 返回该节点的节点编号。
+
+![avatar](photo_3.png)
 
 ```java
     private int allocateNode(int d) {
-        // 第一个节点，即根节点的值，因为二叉树是用数组实现的
+        // 第一个节点，即根节点编号，因为二叉树是用数组实现的
         int id = 1;
         // 获取该层的初始节点，比如 d 为 11，则该层初始节点为 -2048
         int initial = - (1 << d); 
         // 根节点的值，即对应的层级值为 0
         byte val = value(id);
-        // 第一层的根节点值 val 为 0，如果 val > d，表示 d 小于 0，即请求的容量大于 16M，
+        // 根节点的层级值 val 为 0，如果 val > d，表示 d 小于 0，即请求的容量大于 16M，
         // 这样计算 d = maxOrder - (log2(normCapacity) - pageShifts) 才会小于 0
         if (val > d) { // unusable
             return -1;
@@ -67,6 +70,8 @@
 
 #### updateParentsAlloc
 　　遍历更新父节点的层级值，过程如下图。
+
+![avatar](photo_2.png)
 
 ```java
     private void updateParentsAlloc(int id) {
