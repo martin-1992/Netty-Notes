@@ -1,11 +1,15 @@
 ### PoolChunk
-　　memoryMap 和 depthMap 存储的是层级关系，为 byte 对象的数组，在[构造函数]()中对其 memoryMap 和 depthMap 初始化。<br />
+　　memoryMap 和 depthMap 存储的是层级关系，为 byte 对象的数组，在构造函数中对其 memoryMap 和 depthMap 初始化。<br />
   
 - 假设 maxOrder 为 11，则会存储 4096 个 byte 对象，其值为 [0, 1, 1, 2, 2, 2, 2, 3, ..., 11]，按照二叉树排序，根节点为 0，第 1 层为 1，第二层为 2，以此类推到第 11 层为 11；
 - 层级值越大，则其可用的内存越小；
     1. 层级值为 0，可用内存为一个 Chunk（默认 16M），有一个；
     2. 层级值为 1，可用内存为 8M，有两个；
     3. 层级值为 11，可用内存为 8K，有 2048 个。
+ 
+ ![avatar](photo_1.png)
+ 
+ 　　如上图，满二叉树适合用数组形式存储，即 [0, 1, 1, 2, 2, 2, 2, 3, ..., 11]。
 
 ```java
 final class PoolChunk<T> implements PoolChunkMetric {
