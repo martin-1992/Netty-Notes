@@ -1,10 +1,22 @@
 ### PoolArena
+　　有两种数据结构，PoolChunkList 和 PoolSubpage。内存大小分类，分为 Tiny（16B 的整数倍，即 null、16、32、48，有 32 个）、Small（512B、1k、2K、4K） 和 Normal（8K、16K、32K）。
 
-- 内存大小分类，分为 Tiny（16B 的整数倍，即 16、32、48，有 32 个）、Small（512B、1k、2K、4K） 和 Normal（8K、16K、32K）；
-- PoolChunkList 为双向链表，包含 6 个 ChunkList，而一个 ChunkList 又由多个 Chunk（一个 Chunk 为 16M） 组成。每个 ChunkList 表示不同使用率的集合， 比如 q050 的 ChunkList 表示该集合下的 chunk 最小使用率为 50%，最大使用率为 100%。使用链表形式，是为了便于移动、删除 Chunk，当一个 Chunk 的使用率发生变化，可移动该 Chunk 到对应使用率的 ChunkList 集合中 ；
-- 一个 Chunk 为 16M，一个 Chunk 分为 2048 个 page，一个 page 为 8K。一个 page 下又分为多个 subpage（tinySubpagePools 和 smallSubpagePools）。
-    1. 假设要分配的内存为 16K，则取一个 Chunk 下的两个 page；
-    2. 如果需要的内存为 2K，则取一个 page 下的 subpage（small 的）。subpage 的大小不固定，根据第一次请求分配的大小为单位（最小为 16B 的 tiny）。比如，第一次请求分配 32B，则 Page 按照 32B 均匀切分为 256 个，16B 则切分为 512 个。
+### PoolChunkList
+
+- PoolChunkList 为双向链表，包含 6 个 ChunkList，而一个 ChunkList 又由多个 Chunk（一个 Chunk 为 16M） 组成；
+- 每个 ChunkList 表示不同使用率的集合， 比如 q050 的 ChunkList 表示该集合下的 chunk 最小使用率为 50%，最大使用率为 100%。使用链表形式，是为了便于移动、删除 Chunk，当一个 Chunk 的使用率发生变化，可移动该 Chunk 到对应使用率的 ChunkList 集合中。
+
+![avatar](photo_2.png)
+
+### PoolSubpage
+
+- 一个 Chunk 为 16M，一个 Chunk 分为 2048 个 page，一个 page 为 8K。一个 page 下又分为 tinySubpagePools 和 smallSubpagePools；
+    1. smallSubpagePools，为 PollSubpage 数组，包含 4 个 PollSubpage 对象；
+    2. tinySubpagePools，为 PollSubpage 数组，包含 32 个 PollSubpage对象。
+- 假设要分配的内存为 16K，则取一个 Chunk 下的两个 page；
+- 如果需要的内存为 2K，则取一个 page 下的 subpage（small 的）。subpage 的大小不固定，根据第一次请求分配的大小为单位（最小为 16B 的 tiny）。比如，第一次请求分配 32B，则 Page 按照 32B 均匀切分为 256 个，16B 则切分为 512 个。
+
+![avatar](photo_1.png)
 
 ```java
 abstract class PoolArena<T> implements PoolArenaMetric {
