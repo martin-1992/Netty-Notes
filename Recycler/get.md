@@ -1,6 +1,6 @@
 ### Recycler#get
 
-![avatar](photo__1.png)
+![avatar](photo_1.png)
 
 - maxCapacityPerThread 为 0，则直接创建对象，用完不回收；
 - maxCapacityPerThread 不为 0，则获取对象池的副本；
