@@ -1,7 +1,7 @@
 ### allocateTiny
 
-- cacheForTiny，根据请求容量 normCapacity 找到对应的 MemoryRegionCache 的节点。tiny 是按 16（>>4） 的倍数来划分的，即 null、16B、32B、48B，直到 496B，有 32 个。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配；
-- allocate，分配缓存。
+- cacheForTiny，根据请求容量 normCapacity 找到对应的 MemoryRegionCache 的节点（MemoryRegionCache 绑定一个队列）。tiny 是按 16（>>4） 的倍数来划分的，即 null、16B、32B、48B，直到 496B，有 32 个。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配；
+- allocate，从 MemoryRegionCache 绑定的队列中获取一个对象 Entry 给 ByteBuf，进行初始化，分配缓存。
 
 ```java
     boolean allocateTiny(PoolArena<?> area, PooledByteBuf<?> buf, int reqCapacity, int normCapacity) {
