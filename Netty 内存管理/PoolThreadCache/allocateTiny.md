@@ -11,7 +11,8 @@
 ```
 
 ### cacheForTiny
-　　根据请求容量获取分配在内存数组中的位置，因为 tinySubPageDirectCaches 是按 16B、32B、48B... 来分配的。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配。索引 1 为 16B，索引 2 为 32B。
+　　根据请求容量获取分配在内存数组中的位置，因为 tinySubPageDirectCaches 是按 16B、32B、48B... 来分配的。比如请求容量 normCapacity 为 32，则 32 >>> 4 为 2，分配在 tiny 数组中索引位置为 2。注意 索引 0 为空的，不分配。索引 1 为 16B，索引 2 为 32B。<br />
+　　注意，tinySubPageDirectCaches 为缓存，第一次调用 allocate 时，tinySubPageDirectCaches 为空，没有缓存的对象。
 
 ![avatar](photo_2.png)
 
