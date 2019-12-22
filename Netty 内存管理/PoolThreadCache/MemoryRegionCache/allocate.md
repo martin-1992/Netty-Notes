@@ -1,5 +1,5 @@
 ### allocate
-　　从队列中获取缓存的内存块，初始化到 PooledByteBuf 对象中，并返回是否分配成功。
+　　如果 tinySubPageDirectCaches / smallSubPageDirectCaches / normalDirectCaches 中存在有缓存的对象，则从该队列中获取缓存的内存块，初始化到 PooledByteBuf 对象中，并返回是否分配成功。
 
 - 从队列里弹出一个 Entry 对象（缓存的内存块）；
 - initBuf，对 Entry 进行初始化，抽象方法，由子类 SubPageMemoryRegionCache 和 NormalMemoryRegionCache 来实现；
@@ -25,22 +25,22 @@ protected abstract void initBuf(PoolChunk<T> chunk, ByteBuffer nioBuffer, long h
                                 PooledByteBuf<T> buf, int reqCapacity);
 ```
 
-### PoolThreadCache#SubPageMemoryRegionCache
+### PoolThreadCache#SubPageMemoryRegionCache.initBuf
 　　以 SubPageMemoryRegionCache 为例，继续调用 PoolChunk#initBufWithSubpage 的方法。
 
 ```java
 @Override
 protected void initBuf(
         PoolChunk<T> chunk, ByteBuffer nioBuffer, long handle, PooledByteBuf<T> buf, int reqCapacity) {
-    // handle 为指向连续内存的一块指针
+    // handle 为指向连续内存的一块指针，通过 chunk 分配
     chunk.initBufWithSubpage(buf, nioBuffer, handle, reqCapacity);
 }
 ```
 
 ### PoolChunk#initBufWithSubpage
 
-- 获取 Subpage 对象;
-- [buf.init]()，初始化 SubPage 内存块到 PooledByteBuf 中。
+- 通过 handle 获取该对象的内存位置，获取 Subpage 对象;
+- [buf.init](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PooledByteBuf)，初始化 SubPage 内存块到 PooledByteBuf 中。
 
 ```java
     void initBufWithSubpage(PooledByteBuf<T> buf, ByteBuffer nioBuffer, long handle, int reqCapacity) {
@@ -50,7 +50,7 @@ protected void initBuf(
     private void initBufWithSubpage(PooledByteBuf<T> buf, ByteBuffer nioBuffer,
                                     long handle, int bitmapIdx, int reqCapacity) {
         assert bitmapIdx != 0;
-
+        // 通过 handle 获取该对象的内存位置
         int memoryMapIdx = memoryMapIdx(handle);
         // 获取 Subpage 对象
         PoolSubpage<T> subpage = subpages[subpageIdx(memoryMapIdx)];
@@ -67,3 +67,5 @@ protected void initBuf(
         return memoryMapIdx ^ maxSubpageAllocs; // remove highest set bit, to get offset
     }
 ```
+
+#### runOffset
