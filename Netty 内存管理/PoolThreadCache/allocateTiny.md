@@ -54,6 +54,7 @@
 
 ### allocate
 
+- 第一次调用 allocate 时，tinySubPageDirectCaches 数组中的元素为空，没有缓存的对象，返回 false；
 - [cache.allocate](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache/allocate.md)，MemoryRegionCache 绑定一个队列，从该队列获取一个对象 Entry 给 ByteBuf，进行初始化。
 - trim，释放 MemoryRegionCache 数组中没有分配给 ByteBuf 的内存，防止内存泄漏。
 
