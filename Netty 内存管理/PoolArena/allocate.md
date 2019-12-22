@@ -1,8 +1,8 @@
 ### allocate
 
-- 从对象池 Recycler 获取 ByteBuf 对象，如果没有，则直接创建；
+- newByteBuf()，从对象池 Recycler 获取 ByteBuf 对象，如果没有，则直接创建；
 - 初始化 ByteBuf 对象，即重置读写指针、重置读写指针的标记值等；
-- 在该 ByteBuf 对象上，进行内存分配。
+- allocate()，在该 ByteBuf 对象上，进行内存分配。
 
 ```java
     PooledByteBuf<T> allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) {
@@ -13,19 +13,19 @@
     }
 ```
 
-### PoolArena#newByteBuf
+### newByteBuf
 　　以 DirectArena 为例，默认情况下，是有 Unsafe 的，即调用 PooledUnsafeDirectByteBuf。
 
 ```java
-        @Override
-        protected PooledByteBuf<ByteBuffer> newByteBuf(int maxCapacity) {
-            // 默认情况下，是有 Unsafe 的
-            if (HAS_UNSAFE) {
-                return PooledUnsafeDirectByteBuf.newInstance(maxCapacity);
-            } else {
-                return PooledDirectByteBuf.newInstance(maxCapacity);
-            }
+    @Override
+    protected PooledByteBuf<ByteBuffer> newByteBuf(int maxCapacity) {
+        // 默认情况下，是有 Unsafe 的
+        if (HAS_UNSAFE) {
+            return PooledUnsafeDirectByteBuf.newInstance(maxCapacity);
+        } else {
+            return PooledDirectByteBuf.newInstance(maxCapacity);
         }
+    }
 ```
 
 #### PooledUnsafeDirectByteBuf#newInstance
@@ -67,11 +67,14 @@
     }
 ```
 
-### PoolArena#allocate
+### allocate
 
 - 标准化请求的内存容量，为 2 的次方，从大到小来判断；
-- 如果对象池中有可使用的缓存对象，则获取缓存对象，进行内存分配；
-- 没有，则内存堆上进行内存分配。
+- 使用位预算，根据请求容量判断。
+- 小于 512 为 tiny，调用 [cache.allocateTiny](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/allocateTiny.md)；
+- 如果缓存 tinySubPageDirectCaches 有可使用的对象，则获取对象，进行内存分配；
+- 没有则 cache.allocateTiny 为 false，设置 table = tinySubpagePools 进行内存分配；
+- 最后释放内存时，会将 tinySubpagePools 分配的对象放入 tinySubPageDirectCaches，下次可从缓存 tinySubPageDirectCaches 中获取。
 
 ```java
     private void allocate(PoolThreadCache cache, PooledByteBuf<T> buf, final int reqCapacity) {

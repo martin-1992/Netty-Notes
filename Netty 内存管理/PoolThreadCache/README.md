@@ -1,7 +1,14 @@
 ### PoolThreadCache
-　　PoolThreadCache 为每个线程维护一个缓存对象的列表，该列表有 tiny、small 和 normal 三种类型的缓存，这三种是预先申请的。而大于 16M 的，则由 JVM 直接申请内存。<br />
-　　缓存是以数组形式 byte[] 申请的，一个 [MemoryRegionCache]() 包含一个队列。一个队列的长度由缓存的类型决定，比如 tiny 的 MemoryRegionCache，其队列长度为 512，small 的 MemoryRegionCache 队列长度为 256，normal 的 MemoryRegionCache 队列长度为 64。<br />
-　　缓存又分为堆内 heap 和堆外 direct，使用堆外，需要手动释放内存，因为不是由 JVM 管理的。
+　　有两种结构，为 [PoolArena](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolArena) 和 [MemoryRegionCache](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache)，如下图。
+
+![avatar](photo_1.png)
+
+　　PoolThreadCache 为每个线程维护一个缓存对象的列表，缓存分为堆内 heap 和直接内存 direct。默认使用直接内存，不是由 JVM 管理，需要手动释放内存。以直接内存为例，该列表有 tiny、small 和 normal 三种类型的缓存，这三种是预先申请的。而大于 16M 的，则由 JVM 直接申请内存。<br />
+　　缓存是以数组形式 byte[] 申请的，tinySubPageDirectCaches 有 32 个 MemoryRegionCache，每个 MemoryRegionCache 绑定一个队列，该队列长度为 512，如下图。
+
+![avatar](photo_3.png)
+
+　　同理，smallSubPageDirectCaches 有 4 个 MemoryRegionCache，每个 MemoryRegionCache 绑定一个队列，该队列长度为 256。normalDirectCaches 有 3 个 MemoryRegionCache，每个 MemoryRegionCache 绑定一个队列，该队列长度为 64。
 
 ```java
 final class PoolThreadCache {
@@ -10,10 +17,9 @@ final class PoolThreadCache {
     
     // 堆内的内存分配器
     final PoolArena<byte[]> heapArena;
-    // 堆外的内存分配器
+    // 堆外（直接）的内存分配器
     final PoolArena<ByteBuffer> directArena;
 
-    // Hold the caches for the different size classes, which are tiny, small and normal.
     // PoolThreadCache 为每个线程都会维护的一个对象，所有每个线程都会有 tiny, small 和 normal
     // 这三种类型的缓存，缓存以数组形式 byte[]，比如 tiny[1] 表示 16B 的缓存 queue，这里有 6
     // 种，又分为 heap 和 direct，以 tinySubPageDirectCaches 为例，查看初始化的地方
@@ -69,7 +75,7 @@ final class PoolThreadCache {
 　　以 tiny 为例，创建一个 MemoryRegionCache 的数组。
 
 - 创建一个 MemoryRegionCache 的数组，numCaches 为传进去的 numTinySubpagePools，默认大小为 32；
-- 遍历 MemoryRegionCache 数组，为每个 [MemoryRegionCache]() 调用其构造函数，创建 MPSC 队列。其长度为 512（cacheSize），缓存类型为 tiny（sizeClass）；
+- 遍历 MemoryRegionCache 数组，为每个 [MemoryRegionCache](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache) 调用其构造函数，创建 MPSC 队列。其长度为 512（cacheSize），缓存类型为 tiny（sizeClass）；
 
 ```java
     private static <T> MemoryRegionCache<T>[] createSubPageCaches(
