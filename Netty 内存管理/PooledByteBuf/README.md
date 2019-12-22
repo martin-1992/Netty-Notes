@@ -37,7 +37,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 ```
 
 ### init0
-　　 初始化 PooledByteBuf 对象。
+　　 初始化 PooledByteBuf 对象，使用变量保存传进来的参数。
 
 ```java
     void init(PoolChunk<T> chunk, ByteBuffer nioBuffer,
@@ -88,9 +88,4 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
         // 回收站里跟标记相关的值，进行重置
         discardMarks();
     }
-```
-
-
-```python
-
 ```
