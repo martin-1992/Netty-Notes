@@ -40,13 +40,15 @@ protected void initBuf(
 ### PoolChunk#initBufWithSubpage
 
 - 在该 chunk 上，通过 handle 获取该对象的内存位置，获取 Subpage 对象;
-- [buf.init](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PooledByteBuf)，初始化 SubPage 内存块到 PooledByteBuf 中。
+- [buf.init](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PooledByteBuf)，初始化 SubPage（为 [PoolSubpage 数组](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolSubpage)，每个 PoolSubpage 为 Subpage 的分配情况表） 内存块到 PooledByteBuf 中。
 
 ```java
     void initBufWithSubpage(PooledByteBuf<T> buf, ByteBuffer nioBuffer, long handle, int reqCapacity) {
         initBufWithSubpage(buf, nioBuffer, handle, bitmapIdx(handle), reqCapacity);
     }
-
+    
+    private final PoolSubpage<T>[] subpages;
+    
     private void initBufWithSubpage(PooledByteBuf<T> buf, ByteBuffer nioBuffer,
                                     long handle, int bitmapIdx, int reqCapacity) {
         assert bitmapIdx != 0;
