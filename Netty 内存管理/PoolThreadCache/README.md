@@ -1,5 +1,5 @@
 ### PoolThreadCache
-　　有两种结构，为 [PoolArena](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolArena) 和 [MemoryRegionCache](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache)，如下图。
+　　有两种结构，为 [PoolArena](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolArena) 和 [MemoryRegionCache](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/MemoryRegionCache)，如下图。PoolArena 为内存分配器，当内存用完后，会将内存对象存入 MemoryRegionCache 中。所以代码中会先判断 MemoryRegionCache 是否有可用的内存，没有才会调用 PoolArena进行创建。
 
 ![avatar](photo_1.png)
 
