@@ -2,19 +2,19 @@
 　　如果 tinySubPageDirectCaches / smallSubPageDirectCaches / normalDirectCaches 中存在有缓存的对象，则从该队列中获取缓存的内存块，初始化到 PooledByteBuf 对象中，并返回是否分配成功。
 
 - 从队列里弹出一个 Entry 对象（缓存的内存块）；
-- initBuf，对 Entry 进行初始化，抽象方法，由子类 SubPageMemoryRegionCache 和 NormalMemoryRegionCache 来实现；
-- 初始化完成后，对 Entry 进行回收，放回到对象池中。
+- initBuf，抽象方法，由子类 SubPageMemoryRegionCache 和 NormalMemoryRegionCache 来实现。以 SubPageMemoryRegionCache 为例，使用 ByteBuf 的变量保存传进来的参数，包括缓存的内存块地址 handle、chunk、偏移量 offset 等；
+- 初始化完成后，对 Entry 进行回收，放回到（缓存的）对象池中。
 
 ```java
 public final boolean allocate(PooledByteBuf<T> buf, int reqCapacity) {
-    // 从队列里弹出一个 Entry 对象
+    // 从队列里弹出一个 Entry 对象，下面代码用完后会进行回收
     Entry<T> entry = queue.poll();
     if (entry == null) {
         return false;
     }
-    // 对 Entry 进行初始化，抽象方法，由子类 SubPageMemoryRegionCache 和 NormalMemoryRegionCache 来实现
+    // 抽象方法，由子类 SubPageMemoryRegionCache 和 NormalMemoryRegionCache 来实现
     initBuf(entry.chunk, entry.nioBuffer, entry.handle, buf, reqCapacity);
-    // 对 Entry 进行回收，放回到对象池中
+    // 对 Entry（内存块） 进行回收，放回到（缓存的）对象池中
     entry.recycle();
 
     ++ allocations;
@@ -26,7 +26,7 @@ protected abstract void initBuf(PoolChunk<T> chunk, ByteBuffer nioBuffer, long h
 ```
 
 ### PoolThreadCache#SubPageMemoryRegionCache.initBuf
-　　以 SubPageMemoryRegionCache 为例，继续调用 PoolChunk#initBufWithSubpage 的方法。
+　　通过 chunk 进行分配，chunk 和 handle 可确认一块内存。以 SubPageMemoryRegionCache 为例，继续调用 PoolChunk#initBufWithSubpage 的方法。
 
 ```java
 @Override
@@ -39,7 +39,7 @@ protected void initBuf(
 
 ### PoolChunk#initBufWithSubpage
 
-- 通过 handle 获取该对象的内存位置，获取 Subpage 对象;
+- 在该 chunk 上，通过 handle 获取该对象的内存位置，获取 Subpage 对象;
 - [buf.init](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PooledByteBuf)，初始化 SubPage 内存块到 PooledByteBuf 中。
 
 ```java
@@ -69,3 +69,11 @@ protected void initBuf(
 ```
 
 #### runOffset
+　　计算偏移量。
+  
+```java
+    private int runOffset(int id) {
+        int shift = id ^ 1 << depth(id);
+        return shift * runLength(id);
+    }
+ ```   
