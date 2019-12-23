@@ -90,7 +90,7 @@
 ```
 
 #### findNextAvail0
-　　获取可用的 Subpage，在 bits 中的位置（0~511，如果 bitmapLength 为 8 的话。为 4，则是 0~255）。
+　　获取可用的 Subpage，在 bits 中的位置（0-511，如果 bitmapLength 为 8 的话。为 4，则是 0-255）。
 
 ```java
     // Subpage 的总数
