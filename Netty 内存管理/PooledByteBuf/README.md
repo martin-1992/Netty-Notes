@@ -1,6 +1,5 @@
-
 ### PooledByteBuf
-　　使用对象池，可重用的 ByteBuf。当对象用完释放后会放回到对象池中，不需要频繁创建对象。
+　　Pooled 为池化，即使用对象池，可重用的 ByteBuf。当对象用完释放后会放回到对象池中，不需要频繁创建对象。
 
 #### 构造函数
 　　设置 recyclerHandle，Handle 只有一个方法，即 recycle，用于回收对象。
@@ -8,7 +7,7 @@
 ```java
 abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 
-    // 用于回收缓存对象
+    // 用于回收 ByteBuf
     private final Recycler.Handle<PooledByteBuf<T>> recyclerHandle;
     // 用于分配内存块
     protected PoolChunk<T> chunk;
@@ -37,7 +36,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
 ```
 
 ### init0
-　　 初始化 PooledByteBuf 对象，使用变量保存传进来的参数。
+　　 初始化 PooledByteBuf 对象，使用变量保存传进来的参数，包括缓存的内存块地址 handle、chunk、偏移量 offset 等。
 
 ```java
     void init(PoolChunk<T> chunk, ByteBuffer nioBuffer,
@@ -61,11 +60,13 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
         tmpNioBuf = nioBuffer;
         allocator = chunk.arena.parent;
         this.cache = cache;
-        // chunk 分配的内存块所处的位置
+        // chunk 分配的内存块所处的位置，即缓存的内存块地址
         this.handle = handle; 
         // page 级别的偏移量 offset 为 0
         this.offset = offset;
+        // 保存请求容量 reqCapacity
         this.length = length;
+        // 保存 subpage.elemSize
         this.maxLength = maxLength;
     }
 ```
