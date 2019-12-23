@@ -69,8 +69,10 @@
 
 ### allocate
 
+![avatar](photo_2.png)
+
 - 标准化请求的内存容量，为 2 的次方，从大到小来判断；
-- 使用位预算，根据请求容量判断。
+- 使用位运算，根据请求容量判断。
 - 小于 512 为 tiny，调用 [cache.allocateTiny](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/PoolThreadCache/allocateTiny.md)；
 - 如果缓存 tinySubPageDirectCaches 有可使用的对象，则获取对象，进行内存分配；
 - 没有则 cache.allocateTiny 为 false，设置 table = tinySubpagePools 进行内存分配；
@@ -93,9 +95,13 @@
                     // was able to allocate out of the cache so move on
                     return;
                 }
+                // 没有可用的缓存对象，直接进行内存分配，先根据请求容量 normCapacity，计算要分配的对象大小，
+                // tinySubpagePools 包含 32 个 PollSubpage对象，从 16 字节到 496 字节。比如 tiny[1]=16B，
+                // tiny[2]=32B，tiny[3]=48B，这样如果是 32B，则 32 除以 16，取第二个。
                 tableIdx = tinyIdx(normCapacity);
                 table = tinySubpagePools;
             } else {
+                // 运行过程同 allocateTiny 类似
                 if (cache.allocateSmall(this, buf, reqCapacity, normCapacity)) {
                     // was able to allocate out of the cache so move on
                     return;
@@ -103,7 +109,7 @@
                 tableIdx = smallIdx(normCapacity);
                 table = smallSubpagePools;
             }
-
+            // PollSubpage 对象是以链表形式串联起来的
             final PoolSubpage<T> head = table[tableIdx];
 
             synchronized (head) {
@@ -142,6 +148,15 @@
             // Huge allocations are never served via the cache so just call allocateHuge
             allocateHuge(buf, reqCapacity);
         }
+    }
+```
+
+#### tinyIdx
+　　把 normCapacity 除以 16，因为 tiny 的数组是按 16 的倍数排的，比如 tiny[1]=16B，tiny[2]=32B，tiny[3]=48B，这样如果是 32B，则 32 除以 16，取第二个。
+
+```java
+    static int tinyIdx(int normCapacity) {
+        return normCapacity >>> 4;
     }
 ```
 
