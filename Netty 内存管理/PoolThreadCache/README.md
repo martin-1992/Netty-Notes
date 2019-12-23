@@ -3,7 +3,7 @@
 
 ![avatar](photo_1.png)
 
-　　PoolThreadCache 为每个线程维护一个缓存对象的列表，缓存分为堆内 heap 和直接内存 direct。默认使用直接内存，不是由 JVM 管理，需要手动释放内存。以直接内存为例，该列表有 tiny、small 和 normal 三种类型的缓存，这三种是预先申请的。而大于 16M 的，则由 JVM 直接申请内存。<br />
+　　PoolThreadCache 为每个线程维护一个缓存对象的列表，缓存分为堆内 heap 和直接内存 direct。默认使用直接内存，**避免每次调用本地 I/O 操作之前（或之后）将缓冲区的内容复制到（或从）中间缓冲区，** 不是由 JVM 管理，需要手动释放内存。以直接内存为例，该列表有 tiny、small 和 normal 三种类型的缓存，这三种是预先申请的。而大于 16M 的，则由 JVM 直接申请内存。<br />
 　　缓存是以数组形式 byte[] 申请的，tinySubPageDirectCaches 有 32 个 MemoryRegionCache，每个 MemoryRegionCache 绑定一个队列，该队列长度为 512，如下图。
 
 ![avatar](photo_3.png)
