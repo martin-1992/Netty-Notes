@@ -1,5 +1,5 @@
 ### ReflectiveChannelFactory#newInstance
-　　反射实例化 constructor，而 constructor 是在该类 ReflectiveChannelFactory 的构造函数中传入。
+　　反射实例化 constructor，而 constructor 是在该类 ReflectiveChannelFactory 的构造函数中传入。使用 constructor 记录传入的 IO 类，比如 NIO 的 Channel、OIO 的 Channel 等等，通过 newChannel 方法进行实例化，**即通过泛型 + 反射来实现不同 IO，达到切换不同 IO 模式。**
 
 ```java
 public class ReflectiveChannelFactory<T extends Channel> implements ChannelFactory<T> {
@@ -7,18 +7,20 @@ public class ReflectiveChannelFactory<T extends Channel> implements ChannelFacto
     private final Constructor<? extends T> constructor;
     
     /**
-     * 使用 constructor 记录传入的 clazz 类
+     * 使用 constructor 记录传入的 clazz 类，比如 NIO 的 Channel、OIO 的 Channel 等等，通过
+     newChannel 方法进行实例化
      */
     public ReflectiveChannelFactory(Class<? extends T> clazz) {
         ObjectUtil.checkNotNull(clazz, "clazz");
         try {
+            // 获取无参构造器
             this.constructor = clazz.getConstructor();
         } catch (NoSuchMethodException e) {
             throw new IllegalArgumentException("Class " + StringUtil.simpleClassName(clazz) +
                     " does not have a public non-arg constructor", e);
         }
     }
-
+    
     @Override
     public T newChannel() {
         try {
