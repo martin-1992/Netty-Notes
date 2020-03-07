@@ -1,6 +1,14 @@
 ### ByteToMessageDecoder
 　　Netty 底层的解码器都是基于 ByteToMessageDecoder 实现的，其执行流程是将二进制流数据解析成一个个对象，添加到对象列表中，然后传给下个节点。
 
+- 创建对象列表；
+- 创建一个 ByteBuf 的变量，用于累加收到的数据；
+- 将数据进行累加，然后调用抽象的解码方法 callDecode，由子类具体实现，将 ByteBuf 解码为对象，添加到对象列表中；
+- 将对象列表传给下个节点 ChannelHandlerContext，进行处理。
+
+### 设计模式
+　　模板方法模式，ByteToMessageDecoder 为抽象基类，包含模板方法 callDecode，不同解码类通过继承 ByteToMessageDecoder 实现各自的模板方法，除了具体的解码，其它流程则由 ByteToMessageDecoder 来执行。
+
 ### ByteToMessageDecoder#channelRead
 　　在 pipeline 每个节点 ChannelHandlerContext，都会调用 ChannelRead() 进行解码处理。
 
@@ -95,7 +103,7 @@
                     //
                     // See:
                     // - https://github.com/netty/netty/issues/4635
-                    // 修复 bug
+                    // 修复 bug，解码中时不能执行删除 handler 操作，只能解码完才可以进行删除
                     if (ctx.isRemoved()) {
                         break;
                     }
