@@ -2,7 +2,7 @@
 　　Netty 底层的解码器都是基于 ByteToMessageDecoder 实现的，其执行流程是将二进制流数据解析成一个个对象，添加到对象列表中，然后传给下个节点。
 
 - 创建对象列表；
-- 创建一个 ByteBuf 的变量，用于累加收到的数据；
+- 创建一个 ByteBuf 的变量 cumulation，用于累加收到的数据；
 - 将数据进行累加，然后调用抽象的解码方法 callDecode，由子类具体实现，将 ByteBuf 解码为对象，添加到对象列表中；
 - 将对象列表传给下个节点 ChannelHandlerContext，进行处理。
 
