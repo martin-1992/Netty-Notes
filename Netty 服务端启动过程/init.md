@@ -71,6 +71,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     @Override
     void init(Channel channel) throws Exception {
         final Map<ChannelOption<?>, Object> options = options0();
+        // 在初始化 Channel，分别使用两个 synchronized 来上锁，代替使用对方法进行
+        // synchronized。减少锁的粒度，从方法级别到对象级别
         synchronized (options) {
             setChannelOptions(channel, options, logger);
         }
