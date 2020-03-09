@@ -42,6 +42,12 @@ public final class Server {
 }
 ```
 
+- 在 mainReactor，即 bossGroup 的 NioEventLoopGroup 构造函数中，调用 openSelector 创建 Selector。一个线程，绑定一个 Selector，为客户端连接做准备；
+- 创建服务端 Channel、初始化配置服务端 Channel；
+- 将服务端 Channel 注册到 Selector 上。设置 ops 为 0，即对任何事件都不感兴趣；
+- 绑定端口；
+- 绑定成功后，会使用 pipeline，从 headContext 设置服务端 Channel 的 ops 为 OP_ACCEPT，完成服务端连接准备。之后客户端连接进来，会为其创建连接和读取数据。
+
 ![avatar](photo_1.png)
 
 ### AbstractBootstrap#doBind
