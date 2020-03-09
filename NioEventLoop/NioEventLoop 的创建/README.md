@@ -1,5 +1,6 @@
 ### NioEventLoopGroup
-　　服务端启动时会创建两个 group，NioEventLoopGroup 为 NioEventLoop 的数组。NioEventLoopGroup 的构造函数是由父类定义的，从 NioEventLoopGroup -> MultithreadEventLoopGroup -> MultithreadEventExecutorGroup，在 MultithreadEventExecutorGroup 类的 MultithreadEventExecutorGroup 方法实现。
+　　服务端启动时会创建两个 group，NioEventLoopGroup 为 NioEventLoop 的数组。NioEventLoopGroup 的构造函数是由父类定义的，从 NioEventLoopGroup -> MultithreadEventLoopGroup -> MultithreadEventExecutorGroup，在 MultithreadEventExecutorGroup 类的 MultithreadEventExecutorGroup 方法实现。<br />
+　　**在 NioEventLoopGroup 中会创建 Selector，** 具体可看 [NioEventLoop 的构造函数](https://github.com/martin-1992/Netty-Notes/blob/932d84af92758d157f544186146f943a6c2a5778/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/NioEventLoop%20%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0.md)。
 
 ```java
 EventLoopGroup bossGroup = new NioEventLoopGroup(1);
