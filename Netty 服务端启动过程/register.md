@@ -130,7 +130,8 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 ```
 
 ### AbstractNioChannel#doRegister
-　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，这里注册的 this 指的是 AbstractNioChannel，将其作为 SelectableChannel 类的附属 attachment，注册到 Selector 上。在 [processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 方法中，Selector 轮询 SelectionKey 时，会取出该 key 的 attachment，即 AbstractNioChannel，检查该 AbstractNioChannel 是否有 IO 事件要处理。
+　　通过自旋，调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，这里注册的 this 指的是 AbstractNioChannel，将其作为 SelectableChannel 类的附属 attachment，注册到 Selector 上。在 [processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 方法中，Selector 轮询 SelectionKey 时，会取出该 key 的 attachment，即 AbstractNioChannel，检查该 AbstractNioChannel 是否有 IO 事件要处理。<br />
+　　当服务端的连接 ServerSocketChannel 注册到 Selector 时，这里的 ops 为 0，即对任何事件都不感兴趣。当绑定端口成功后，才会设置 ops 为 OP_ACCEPT，表示服务端连接已经绑定好端口，可以为客户端的连接创建连接 SocketChannel，以及读取数据。
 
 ```java
     @Override
@@ -140,8 +141,9 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         for (;;) {
             try {
                 // 调用 JDK 底层来注册，channel 是通过 AbstractBootstrap#this.channelFactory.newChannel() 
-                // 进行创建的，将 Channel 注册到 Selector 上，这里注册为 0，表示对任何事件感兴趣，接下来会
-                // 调用 pipeline.fireChannelActive() 进行读事件注册
+                // 进行创建的，将 Channel 注册到 Selector 上，这里注册为 0，表示对任何事件都不感兴趣，接下来在
+                // 绑定端口时，会调用 pipeline.fireChannelActive() 进行读事件注册，即可为客户端连接创建连接和
+                // 读取数据
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {
