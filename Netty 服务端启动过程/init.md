@@ -11,7 +11,6 @@
      .childHandler(new HttpHelloWorldServerInitializer(sslCtx));
 ```
 
-
 ### option
 　　以 b.option(ChannelOption.SO_BACKLOG, 1024); 为例，使用哈希表来保存配置项的，每次对它操作都调用同步方法锁住该对象（使用 final），保证线程安全性。
 
@@ -38,7 +37,6 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 ```
 
-
 ### ServerBootstrap
 　　其他属性方法也是同理，有些属性配置是只有服务端才有，所以是继承了 AbstractBootstrap 的服务引导类 ServerBootstrap 才有，比如 ChannelHandler、childOptions 这些。
 
@@ -57,15 +55,14 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 }
 ```
 
-
 ### init
-　　对每一个配置项，使用同步方法 synchronized 进行配置，初始化 CHannel，保证线程安全。
+　　对每一个配置项，使用同步方法 synchronized 进行配置，初始化 Channel，保证线程安全。
 
 - 配置 options；
 - 获取 Pipeline，在引导类中 .channel(NioServerSocketChannel.class) 中创建；
 - 设置 currentChildOptions 和 currentChildAttrs；
 - 为 pipeline 添加 ChannelHandler；
-- 调用 [SingleThreadEventExecutor#execute](https://github.com/martin-1992/Netty-Notes/blob/56ca8cb154c280855b3caf6746df71e77e7f65f8/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md) 将该非 IO 任务添加到任务队列执行，为 pipeline 添加 [ServerBootstrapAcceptor]()。
+- 调用 [SingleThreadEventExecutor#execute](https://github.com/martin-1992/Netty-Notes/blob/56ca8cb154c280855b3caf6746df71e77e7f65f8/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SingleThreadEventExecutor%23Execute.md) 将该非 IO 任务添加到任务队列执行，为 pipeline 添加 [ServerBootstrapAcceptor]()，用于接收客户端连接 Socket 创建连接后，对连接的初始化。
 
 ```java
     @Override
@@ -108,7 +105,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                // ServerBootstrapAcceptor，负责接收客户端连接 Socket 创建连接后，对连接的初始化
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
