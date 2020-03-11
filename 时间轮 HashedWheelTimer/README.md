@@ -35,7 +35,7 @@
             long tickDuration,
             // tickDuration 的时间单位
             TimeUnit unit,
-            // 时间轮的时间个数，即一圈有多少格
+            // 时间轮的格子数，即一圈有多少格
             int ticksPerWheel,
             // 是否开启内存泄漏检测
             boolean leakDetection,
@@ -56,9 +56,10 @@
         }
 
         // Normalize ticksPerWheel to power of two and initialize the wheel.
-        // 创建时间轮，用于存储定时任务的环形队列，底层用数组实现
+        // 创建时间轮，用于存储定时任务的环形队列，底层用数组实现，
+        // 时间轮格子数为 2 的次方，保证用位运算，高性能
         wheel = createWheel(ticksPerWheel);
-        // 用于计算时间轮格子的索引
+        // 用于计算时间轮格子数的索引
         mask = wheel.length - 1;
 
         // Convert tickDuration to nanos.
