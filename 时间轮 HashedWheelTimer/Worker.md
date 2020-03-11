@@ -29,7 +29,7 @@
             startTime = 1;
         }
 
-        // 唤醒阻塞在 start() 的线程
+        // 唤醒阻塞在 start() 的线程，使用 CountDownLatch，一次只有一个线程执行
         startTimeInitialized.countDown();
 
         do {
@@ -125,7 +125,9 @@
 ```java
     private void processCancelledTasks() {
         for (;;) {
+            // cancelledTimeouts 存放已取消的定时任务
             HashedWheelTimeout timeout = cancelledTimeouts.poll();
+            // 该格子没有已取消的定时任务，已全部处理，直接返回
             if (timeout == null) {
                 // all processed
                 break;
