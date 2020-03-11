@@ -1,5 +1,11 @@
 ## Netty-Notes
 
+### [reactor 三种模式](https://github.com/martin-1992/Netty-Notes/tree/master/reactor%20%E4%B8%89%E7%A7%8D%E6%A8%A1%E5%BC%8F)
+
+- BIO，为传统的 thread per connection，阻塞 I/O。类似排队打饭，一个连接数据处理完，在处理下一个连接；
+- NIO，为 Reactor 模式，非阻塞 I/O。类似点菜、等待被叫，先接收连接，当有请求时在去处理；
+- AIO，为 Procator 模式，异步 I/O。类似包厢，接收连接，当数据处理好通过回调给程序。
+
 ### [Netty 服务端启动过程](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
 　　绑定端口最终会调用 dobind() 方法。
 
@@ -24,8 +30,19 @@
 
 - 添加 ChannelHandler；
 
-#### [Netty 解码](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E8%A7%A3%E7%A0%81)
+### [Netty 解码](https://github.com/martin-1992/Netty-Notes/tree/master/Netty%20%E8%A7%A3%E7%A0%81)
 　　Netty 解码是将一串二进制流解码成多个 ByteBuf（自定义协议数据包），然后交给业务逻辑进行处理。
 
-#### [Recycler](https://github.com/martin-1992/Netty-Notes/tree/master/Recycler)
+### [Recycler](https://github.com/martin-1992/Netty-Notes/tree/master/Recycler)
 　　Recycler 为 Netty 的轻量级对象池，用于获取对象和用完回收对象。
+
+### [FastThreadLocal](https://github.com/martin-1992/Netty-Notes/tree/master/FastThreadLocal)
+　　Netty 中 FastThreadLocal 用来代替 ThreadLocal 存放线程本地变量，FastThreadLocal 相比 ThreadLocal 有两个优势。
+
+- 原先的 ThreadLoacal 使用弱引用的 ThreadLoacalMap，存在内存泄漏的可能。Netty 不使用弱引用的 ThreadLocalMap，不存在该问题；
+- FastThreadLocal 使用数组来存放变量，原生的 ThreadLocal 底层也是数组形式，但是使用哈希加线性探测法来实现的， 当数据量大时或遇到哈希冲突时，ThreadLocal 没有 FastThreadLocal 快。
+
+### [时间轮 HashedWheelTimer](https://github.com/martin-1992/Netty-Notes/tree/master/%E6%97%B6%E9%97%B4%E8%BD%AE%20HashedWheelTimer)
+　　时间轮是存储定时任务的环形队列，其底层为 HashedWheelBucket 数组，数组中的每个值 HashedWheelBucket 为一个双向链表，HashedWheelBucket 为定时任务的包装类，如下图。
+
+![avatar](./时间轮 HashedWheelTimer/photo_1.png)
