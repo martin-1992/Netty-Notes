@@ -112,11 +112,11 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 safeSetSuccess(promise);
                 // 回调 channelRegistered 方法
                 pipeline.fireChannelRegistered();
-                // 前面提到在 doRegister 中，ops 是为 0，这里判定为第一次注册，所以会使用 pipeline，调用 HeadContext
-                // 注册一个读事件
+                // 前面提到在 doRegister 中，ops 是为 0，因为还没有绑定端口 dobind，所以 isActive 为 false，而客
+                // 户端 SocketChannel，则不用=进行端口绑定，所以 isActive 为 true，然后为第一次注册，会执行
+                // fireChannelActive
                 if (isActive()) {
                     if (firstRegistration) {
-                        // 第一次注册，读事件绑定
                         pipeline.fireChannelActive();
                     } else if (config().isAutoRead()) {
                         // 设置 ops 为 readInterestOp，从而可接收客户端的连接和读事件
