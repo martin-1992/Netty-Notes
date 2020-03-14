@@ -51,7 +51,7 @@ public final class Server {
 ![avatar](photo_1.png)
 
 ### AbstractBootstrap#doBind
-　　以服务端的 NioEventLoopGroup 为例，在[构造函数中](https://github.com/martin-1992/Netty-Notes/blob/932d84af92758d157f544186146f943a6c2a5778/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/NioEventLoop%20%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0.md)，它会创建一个服务端的 Selecotr。然后在调用绑定端口时，会创建 ServerSocketChannel，然后初始化 ServerSocketChannel，最后将 ServerSocketChannel 注册到之前 NioEventLoopGroup 创建的 Selector 上。
+　　以服务端的 NioEventLoopGroup 为例，在[NioEventLoopGroup 的构造函数中](https://github.com/martin-1992/Netty-Notes/tree/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA)，会创建 nthreads 个服务端的 Selecotr（这里为 nthreads 为 1，因为 new NioEventLoopGroup(1)）。然后在调用绑定端口时，会创建 ServerSocketChannel，初始化 ServerSocketChannel，最后将 ServerSocketChannel 注册到之前 NioEventLoopGroup 创建的 Selector 上。
 - [initAndRegister](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/initAndRegister.md)，创建 Channel、初始化配置 Channel、将 Channel 注册到 EventLoop（事件轮询器 Selector）；
 - [doBind0](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/doBind0.md)，调用 JDK 底层 API 将端口与 [initAndRegister](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/initAndRegister.md) 创建好的 Channel 进行绑定，并添加监听器。
 
