@@ -1,6 +1,6 @@
 ### NioEventLoopGroup
 　　服务端启动时会创建两个 group，NioEventLoopGroup 为 NioEventLoop 的数组。NioEventLoopGroup 的构造函数是由父类定义的，从 NioEventLoopGroup -> MultithreadEventLoopGroup -> MultithreadEventExecutorGroup，在 MultithreadEventExecutorGroup 类的 MultithreadEventExecutorGroup 方法实现。<br />
-　　**在 NioEventLoopGroup 中会创建 Selector，** 具体可看 [NioEventLoop 的构造函数](https://github.com/martin-1992/Netty-Notes/blob/932d84af92758d157f544186146f943a6c2a5778/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/NioEventLoop%20%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0.md)。
+　　**在 NioEventLoop 中会创建 Selector，** 具体可看 [NioEventLoop 的构造函数](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/NioEventLoop%20%E7%9A%84%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0.md)。
 
 ```java
 EventLoopGroup bossGroup = new NioEventLoopGroup(1);
@@ -17,13 +17,15 @@ EventLoopGroup workerGroup = new NioEventLoopGroup();
     1. 因为对象封闭在任务线程中，即使这些对象是非线程安全也没问题，不需要加锁。但注意需确保 Executor 为单线程才行，在 Netty 中 Executor 是单线程的，并且使用信号量 Semaphore(1) 确保只有一个线程执行任务队列的任务；
     2. 虽然有多个 NioEventLoop，每个 NioEventLoop 都各有一个 Executor，但 Channel 是注册到单个 NioEventLoop，所以 Channel 的 IO 任务是在注册的那个 NioEventLoop 下执行的，为单线程环境；
 - 创建 EventExecutor 数组，其大小为线程数；
-- 遍历 EventExecutor 数组，调用 [newChild](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChild.md)，返回新建的 NioEventLoop 对象。包含创建的 Selector、任务队列，为每个 EventExecutor 配置线程工厂 Executor、Selector 和任务队列。EventExecutor 数组可理解为线程池，之后从池中获取线程对象 NioEventLoop；
+- 遍历 EventExecutor 数组，调用 [newChild](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChild.md)，返回新建的 NioEventLoop 对象。**包含创建的 Selector、任务队列，为每个 EventExecutor 配置线程工厂 Executor、IO 事件轮询器 Selector 和任务队列。** EventExecutor 数组可理解为线程池，之后从池中获取线程对象 NioEventLoop；
     1. 创建新线程放入线程池中，每个线程会保存一个线程工厂 Executor（用于执行任务队列的非 IO 任务）、一个 Selector（用于轮询 Channel，执行 IO 任务）、一个任务队列；
     2. 一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）；
     3. 每个 Selector 轮询注册到该 Selector 下的 Channel，当有 IO 任务时，调用 [NioEventLoop#processSelectedKeys](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 异步执行任务；
-- [chooserFactory.newChooser(children)](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChooser.md)，chooser 传入的为之前传入的 children，是 EventLoop 的选择器，通过轮询方式从 NioEventLoopGroup 中获取 NioEventLoop，处理新的 Channel。chooser 优化了线程池获取线程（NioEventLoop）的方式，使用数组方式，做了优化，根据数组长度，判断创建数组的长度是否为 2 的次方，能否使用位运算获取索引下标；
+- [chooserFactory.newChooser(children)](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA/newChooser.md)，**将之前创建的 EventExecutor 数组（为 NioEventLoop 对象数组）放入 newChooser 中，通过 next() 方法，即轮询从 NioEventLoopGroup 中获取 NioEventLoop，处理新的 Channel。** chooser 优化了线程池获取线程（NioEventLoop）的方式，使用数组方式，做了优化，根据数组长度，判断创建数组的长度是否为 2 的次方，能否使用位运算获取索引下标；
 - 添加线程终止的监听器；
 - 使用变量 readonlyChildren 保存线程池 EventExecutor 的集合，用于迭代器，只可读。
+
+![avatar](photo_4.png)
 
 ```java
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor,

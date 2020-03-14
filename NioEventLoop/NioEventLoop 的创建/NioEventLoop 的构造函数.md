@@ -1,5 +1,6 @@
 ### NioEventLoop 的构造函数
-　　调用底层 JDK 创建 Selector，一个 Selector 绑定一个线程 NioEventLoop，一个 Selector 下有多个 Channel（包装的 Socket）。
+　　**主要是调用底层 JDK 创建 Selector（IO 事件轮询器），一个 Selector 绑定一个线程 NioEventLoop，** 一个 Selector 下有多个 Channel（包装的 Socket）。<br />
+　　同时会对原生的 Selector 进行优化，原生的 selectedKeys 和 publicSelectedKeys 都使用 hashSet 实现，Netty 替换为用数组实现，便于使用遍历方式处理，效率更高。
 
 ```java
     NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
