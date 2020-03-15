@@ -1,4 +1,5 @@
 ### NioEventLoop#select
+　　使用轮询发现 Channel 感兴趣的 IO 事件，封装了 JDK 底层的 select 的三种方法，阻塞式的 selector.select()、非阻塞式的 selectNow()、带时间的阻塞 select(timeoutMillis) 。因为 jdk 底层的 Selector 会出现 bug，所以 **Netty 通过计算阻塞时间和 select 次数，来判断是否触发空轮询 bug，是则重建 Selector 来避免空轮询 bug。**
 
 - [SelectStrategy#calculateStrategy](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/SelectStrategy.md)，获取策略；
 - select 次数为 0 时，会进行一次非阻塞的 select 操作，返回 Channel 新增的感兴趣的就绪 IO 事件数量；
