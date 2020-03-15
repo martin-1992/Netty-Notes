@@ -15,7 +15,11 @@
 ### [NioEventLoop](https://github.com/martin-1992/Netty-Notes/tree/master/NioEventLoop)
 
 - NioEventLoop 的创建；
-- NioEventLoop 的启动。
+  1. 创建一个优化后的创建一个 Selector（IO 事件轮询器）；
+  2. 创建线程工厂 Executor；
+  3. 创建任务队列 taskQueue；
+  4. 设置了队列的拒绝策略。
+- NioEventLoop 的启动。在 Netty 服务端启动过程讲到服务端 Channel 注册到 Selector 的某个 NioEventLoop 上，这时 NioEventLoop 会调用 run() 方法进行死循环，处理 IO 事件。因为服务端 Channel 注册时，设置感兴趣的事件为 OP_ACCEPT，所以会接收客户端 Channel，同样重复服务端 Channel 的注册流程，不过客户端 Channel 会注册到 workerGroup 上的 NioEventLoop。
 
 ### [新连接的接入](https://github.com/martin-1992/Netty-Notes/tree/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5)
 
