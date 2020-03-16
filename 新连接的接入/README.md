@@ -1,4 +1,7 @@
-### Netty 的接收客户端 Channel 处理逻辑
+### 服务端 Channel 接收客户端 Channel
+　　服务端 Channel 接收客户端 Channel，并将客户端 Channel 注册到 workerGroup 的一个 NioEventLoop，然后客户端 Channel 调用自身的 pipeline，进行 fireChannelActive，往下传播。详细可看 [检测新连接](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/%E6%A3%80%E6%B5%8B%E6%96%B0%E8%BF%9E%E6%8E%A5.md)
+
+![avatar](photo_1.png)
 
 - 在服务端 Channel 的启动中，即 [NioEventLoop 的启动](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/README.md)，调用 run() 方法，死循环获取感兴趣的 IO 事件。因为服务端 Channel 感兴趣的就 OP_ACCEPT，即会接受客户端的新连接；
 - 然后服务端 Channel 会调用 [NioEventLoop#processSelectedKey()](https://github.com/martin-1992/Netty-Notes/blob/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%90%AF%E5%8A%A8/processSelectedKeys.md) 对不同 IO 事件进行轮询处理。调用 [unsafe.read()](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/%E6%A3%80%E6%B5%8B%E6%96%B0%E8%BF%9E%E6%8E%A5.md) 检测到 accpet 或 read 事件进行处理，主要是服务端 Channel 获取客户端的连接 Channel，将其包装成 [NioSocketChannel](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/NioSocketChannel.md)，**设置客户端的连接 Channel 设置禁止 Nagle 算法；**
