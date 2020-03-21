@@ -1,6 +1,6 @@
 ### AdaptiveRecvByteBufAllocator
 　　自适应数据大小的分配器，根据这次接收数据的实际大小，调整接下来的 ByteBuf 大小。<br />
-　　Netty 会使用一个容量表，0~496 为 16 递增，而 512~1073741824 为两倍递增，即容量表为 [16, 32, 48, ... , 496, 512, 1024, 2048, ... , 1073741824]。**通过二分法，从容量表中找到 ByteBuf 最适合的大小。**
+　　Netty 会使用一个容量表，0-496 为 16 递增，而 512-1073741824 为两倍递增，即容量表为 [16, 32, 48, ... , 496, 512, 1024, 2048, ... , 1073741824]。**通过二分法，从容量表中找到 ByteBuf 最适合的大小。**
 
 ```java
 public class AdaptiveRecvByteBufAllocator extends DefaultMaxMessagesRecvByteBufAllocator {
