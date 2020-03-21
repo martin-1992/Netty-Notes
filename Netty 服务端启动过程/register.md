@@ -90,7 +90,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
 - 调用 doRegister() 方法，将服务端 Channel 注册到 bossGroup 的 NioEventLoopGroup 的其中一个 NioEventLoop（Selector） 上。doRegister() 方法在 AbstractChannel#doRegister 实现为空，交由子类来实现，这里以 AbstractNioChannel#doRegister 为例。通过自旋，**调用 JDK 底层来注册，保证 Channel 注册到 EventLoop（Selector） 上，** 获取 selectionKey，设置 ops 为 0，表示对任何事物不感兴趣；
 - 调用 pipeline.invokeHandlerAddedIfNeeded()，回调 handlerAdded 方法，最终会调用 initChannel(Channel) 方法，该方法是用户重写的。添加用户自定义的 ChannelHandler 到 pipeline 中；
-- 当新连接注册到 EventLoop（Selector） 上，第一次注册时会调用 [pipeline.fireChannelActive]()，从 HeadContext 开始，为服务端的 Channel 配置。在 doBeginRead() 中会设置该 Selector 的 selectionKey，之前注册时 ops 为 0，这里设置 ops 为 readInterestOp，可为客户端连接创建连接和读取数据。
+- 注意，服务端连接 Channel 还需要绑定端口，所以 isActive 为 false，这里不会触发 pipeline.fireChannelActive()。而客户端连接 Channel 不用绑定端口，所以会触发 pipeline.fireChannelActive()。
 
 ```java
         private void register0(ChannelPromise promise) {
@@ -113,7 +113,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 // 回调 channelRegistered 方法
                 pipeline.fireChannelRegistered();
                 // 前面提到在 doRegister 中，ops 是为 0，因为还没有绑定端口 dobind，所以 isActive 为 false，而客
-                // 户端 SocketChannel，则不用=进行端口绑定，所以 isActive 为 true，然后为第一次注册，会执行
+                // 户端 SocketChannel，则不用进行端口绑定，所以 isActive 为 true，然后为第一次注册，会执行
                 // fireChannelActive
                 if (isActive()) {
                     if (firstRegistration) {

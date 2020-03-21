@@ -14,7 +14,7 @@
 - 判断当前线程是否在 EventLoop 线程中；
 - isActive()，调用 JDK 底层 API 判断该端口是否绑定，初次进行为未绑定；
 - doBind()，调用 JDK 底层 API 进行端口绑定，doBind 为 Channel 接口的方法，由子类实现；
-- [pipeline.fireChannelActive()]()，端口绑定完成后，会通过 pipeline，从 headContext 设置服务端 Channel 的 ops 为 OP_ACCEPT，完成服务端连接准备。之后客户端连接进来，会为其创建连接和读取数据。。
+- [pipeline.fireChannelActive()](https://github.com/martin-1992/Netty-Notes/blob/master/%E6%96%B0%E8%BF%9E%E6%8E%A5%E7%9A%84%E6%8E%A5%E5%85%A5/pipeline%23fireChannelActive.md)，端口绑定完成后，会通过 pipeline，从 headContext 设置服务端 Channel 的 ops 为 OP_ACCEPT，完成服务端连接准备。之后客户端连接进来，会为其创建连接和读取数据。
 
 ```java
     @Override

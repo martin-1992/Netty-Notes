@@ -1,8 +1,9 @@
 ### NioEventLoop#processSelectedKey() 执行逻辑
 
-- selectedKeys 为优化后的 keySet，在NioEventLoop 的构造函数中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet，遍历 keySet 效率更高；
+- selectedKeys 为优化后的 keySet，在 [NioEventLoop 的构造函数](https://github.com/martin-1992/Netty-Notes/tree/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA)中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet，遍历 keySet 效率更高；
 - selectedKeys 中每个 key 是在 [Netty 服务端启动过程#AbstractNioChannel#register](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/register.md) 进行注册的，每个 key 的 attachment 对应一个 AbstractNioChannel，调用 processSelectedKey 进行处理该 Channel 已就绪的 IO 事件；
 - processSelectedKeysOptimized()，使用优化后的 keySet 来处理每个 key 的附属 attachment（包含 Channel），获取该 Channel 新增的已就绪的感兴趣的 IO 事件，包含OP_CONNECT 连接，OP_WRITE 写， OP_READ 读，OP_ACCEPT 新连接事件，针对不同的 IO 事件进行处理。
+    1. 以 OP_ACCEPT 为例，服务端 Channel 注册的 Selector 的 NioEventLoop 会接收客户端连接 Channel，因为服务端 Channel 感兴趣的事件为 OP_ACCEPT，所以在 processSelectedKey 时，会调用 [NioMessageUnsafe#read]()，它会读取到客户端连接，然后通过 pipeline.fireChannelRead 进行传播。在传播中会调用节点 [ServerBootstrapAcceptor#ChannelRead]()，将 SocketChannel 注册到 workGroup（NioEventLoopGroup）。
 
 ### NioEventLoop#processSelectedKeys
 　　selectedKeys 为优化后的 keySet，在 [NioEventLoop 的构造函数](https://github.com/martin-1992/Netty-Notes/tree/master/NioEventLoop/NioEventLoop%20%E7%9A%84%E5%88%9B%E5%BB%BA) 中会调用 openSelector 方法，创建一个优化的 Selector，该 Selector 的 selectedKeys 为数组形式的 keySet，替换掉原先 hashset 形式的 keySet。keySet 用于存放注册到该 Selector 的 Channel，通过轮询方式对该 Channel 已就绪的事件进行相应处理，轮询即数组遍历，效率更高。
