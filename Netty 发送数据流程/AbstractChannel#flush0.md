@@ -29,14 +29,14 @@
 ```
 
 ### NioSocketChannel#doWrite
-　　消息发送的流程。
+　　通过调用底层的 ch.write(nioBuffers) 来发送数据。
 
 - 将要发送的数据节点 flushedEntry 包装成 ByteBuffer，添加到 ByteBuffer 的数组 nioBuffers；
-- 调用底层方法 ch.write(nioBuffers)，将数据写入，分为单次写入 nioBuffers[0] 和批量写入 nioBuffers；
+- 调用底层方法 ch.write(nioBuffers)，发送消息数据。分为单次发送 nioBuffers[0] 和批量发送 nioBuffers；
 - 根据 buffer 剩余的大小和这次写入的消息数据大小，动态调整 buffer 大小，判断是否要扩容或缩容；
 - 从 ChannelOutboundBuffer 中移除已经发送出去的数据；
 - 调用 incompleteWrite 方法。
-    1. 如果消息数据都已写入，则注册一个 OP_WRITE 写事件，表示可以发送。然后在 NioEventLoop#processSelectedKey 会检查到 OP_WRITE，调用底层的 ch.unsafe().forceFlush() 发送消息数据；
+    1. 当数据没写完时或写的缓存空间不够时，会注册一个 OP_WRITE 写事件，然后在 NioEventLoop#processSelectedKey 会检查到 OP_WRITE，调用底层的 ch.unsafe().forceFlush() 继续将没写完的数据写到缓冲区中发送；
     2. 如果循环 16 次后消息都还没写完，则创建一个 task 来执行。让其他线程可以继续执行任务，不会阻塞太长时间;
     3. 这里设置为 16 次，是防止 NioEventLoop 一直在处理该 Channel 的消息发送，导致其它 Channel 长时间等待，类似线程饿死的情况。
 
@@ -144,7 +144,7 @@
 ```
 
 #### NioEventLoop#processSelectedKey
-　　调用方法 setOpWrite() 方法注册一个 OP_WRITE 事件后，在 NioEventLoop 中会轮询检查到 OP_WRITE 事件，然后调用底层 channel 执行 flush 发送消息的操作。
+　　调用方法 setOpWrite() 方法注册一个 OP_WRITE 事件后，在 NioEventLoop 中会轮询检查到 OP_WRITE 事件，调用底层的 ch.unsafe().forceFlush() 继续将没写完的数据写到缓冲区中发送。注意，写完要及时关闭，否则每次循环都会检测该事件。
 
 ```java
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
@@ -154,5 +154,3 @@
                 ch.unsafe().forceFlush();
             }
 ```
-
-
