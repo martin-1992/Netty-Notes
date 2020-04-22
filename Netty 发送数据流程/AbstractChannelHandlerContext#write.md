@@ -1,7 +1,8 @@
 ### AbstractChannelHandlerContext#write
+　　找到下个节点 ChannelHandlerContext，调用其 invokeWrite 方法，将消息数据写到 buffer 中。
 
 - 找到下个 outBound（headContext），选择该 outBound 绑定的 NioEventLoop；
-- 如果是 flush，则调用 [invokeWriteAndFlush]() 方法。否则调用 [AbstractChannelHandlerContext#invokeWrite]() 方法。
+- 如果是 flush，则调用 [AbstractChannelHandlerContext#invokeWriteAndFlush](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E6%B5%81%E7%A8%8B/AbstractChannelHandlerContext%23flush.md) 方法。否则调用 [AbstractChannelHandlerContext#invokeWrite](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E6%B5%81%E7%A8%8B/AbstractChannel%23write.md) 方法。
 
 ```java
     @Override
