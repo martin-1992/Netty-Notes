@@ -50,7 +50,9 @@
 ```
 
 ### AbstractChannel#flush
-　　更改数据状态，由未发送 unflushedEntry 改为已发送 flushedEntry。
+
+- addFlush()，更改数据状态，由未发送 unflushedEntry 改为已发送 flushedEntry。
+- [flush0](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E6%B5%81%E7%A8%8B/AbstractChannel%23flush0.md)，发送数据。
 
 ```java
     @Override
