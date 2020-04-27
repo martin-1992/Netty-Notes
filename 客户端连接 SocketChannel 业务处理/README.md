@@ -1,5 +1,5 @@
 ### AbstractNioByteChannel#read
-　　在 [客户端 SocketChannel 接收数据中]() ，会调用 pipeline.fireChannelRead(byteBuf) 方法，通过 pipeline 传播 ByteBuf 接收到的数据，进行业务处理。<br />
+　　在 [客户端 SocketChannel 接收数据中](https://github.com/martin-1992/Netty-Notes/tree/master/%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%BF%9E%E6%8E%A5%20SocketChannel%20%E6%8E%A5%E6%94%B6%E6%95%B0%E6%8D%AE) ，会调用 pipeline.fireChannelRead(byteBuf) 方法，通过 pipeline 传播 ByteBuf 接收到的数据，进行业务处理。<br />
 　　对于读事件的数据，存到 ByteBuf 中，然后从 pipeline 的头结点 headContext 开始传播，经过多个 Handler 进行处理。**业务处理的本质，是数据在 pipeline 上经过所有的 Handler，调用 ChannelRead() 进行处理。**
 
 ```java
