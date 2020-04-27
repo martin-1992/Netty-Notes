@@ -1,5 +1,34 @@
 ### Netty 发送数据的流程
-　　以 Netty 中的示例代码为例，在 channelRead 方法中会写数据。当完成后，会调用 channelReadComplete，将数据发送出去。
+　　如下为 Netty 中的示例代码，在 channelRead 方法中会写数据。当完成后，会调用 channelReadComplete，将数据发送出去。
+
+```java
+@Sharable
+public class EchoServerHandler extends ChannelInboundHandlerAdapter {
+    
+    /**
+     * 写数据
+     */
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        ctx.write(msg);
+    }
+
+    /**
+     * 发送数据
+     */
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        // Close the connection when an exception is raised.
+        cause.printStackTrace();
+        ctx.close();
+    }
+}
+```
 
 - ctx.write()，ctx 表示 pipeline 上的一个节点 ChannelHandlerContext；
     1. 在 [AbstractChannelHandlerContext#write](https://github.com/martin-1992/Netty-Notes/blob/master/Netty%20%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E6%B5%81%E7%A8%8B/AbstractChannelHandlerContext%23write.md) 方法中，会找到下个节点 ChannelHandlerContext，调用其 invokeWrite 方法，将消息数据传到下个节点；
